@@ -78,7 +78,7 @@ export default async function DashboardPage() {
       accent: aRegulariser === 0 ? 'success' : 'warning',
     },
     { titre: 'Trésorerie', valeur: euros(encaisseMois), sous: 'encaissé ce mois', href: '/app/facturation', icon: Wallet },
-    { titre: 'CA dormant', valeur: euros(caDormantCents), sous: `${ouvrages.length} installations à relancer`, href: '/app/clients', icon: PiggyBank },
+    { titre: 'CA dormant', valeur: euros(caDormantCents), sous: `${ouvrages.length} installations à relancer`, href: '/app/recurrence', icon: PiggyBank },
     { titre: 'Activité', valeur: `${m3Mois.toFixed(1)} m³`, sous: 'pompés ce mois', href: '/app/conformite/registre', icon: Droplets },
     { titre: "File d'attente", valeur: `${fileAttente ?? 0}`, sous: 'commandes non planifiées', href: '/app/interventions', icon: Inbox },
   ];

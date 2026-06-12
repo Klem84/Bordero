@@ -129,10 +129,32 @@ try {
     const sid = s.rows[0].id;
     const periodicite =
       ouvrageType === 'BAC_A_GRAISSE' ? 6 : ouvrageType === 'SEPARATEUR_HYDROCARBURES' ? 12 : 48;
+    // Date de dernière intervention calée pour que l'échéance (= dernière +
+    // périodicité, posée par le trigger) illustre la récurrence : en retard,
+    // proche, ou à jour selon l'ouvrage.
+    const addMonths = (d, n) => {
+      const x = new Date(d);
+      x.setMonth(x.getMonth() + n);
+      return x;
+    };
+    const addDays = (d, n) => {
+      const x = new Date(d);
+      x.setDate(x.getDate() + n);
+      return x;
+    };
+    const isoDay = (d) => d.toISOString().slice(0, 10);
+    const now0 = new Date();
+    const echCible = {
+      BAC_A_GRAISSE: addMonths(now0, -4), // en retard
+      SEPARATEUR_HYDROCARBURES: addMonths(now0, -6), // en retard
+      FOSSE_TOUTES_EAUX: addDays(now0, 25), // proche (sous 6 semaines)
+      FOSSE_SEPTIQUE: addMonths(now0, 18), // à jour
+    };
+    const derniere = isoDay(addMonths(echCible[ouvrageType] ?? addMonths(now0, -4), -periodicite));
     const o = await client.query(
       `insert into public.ouvrages(organisation_id, site_id, type, volume_nominal_litres, periodicite_mois, date_derniere_intervention)
-       values ($1,$2,$3,$4,$5, current_date - interval '40 months') returning id`,
-      [DEMO_ORG, sid, ouvrageType, volume, periodicite],
+       values ($1,$2,$3,$4,$5,$6) returning id`,
+      [DEMO_ORG, sid, ouvrageType, volume, periodicite, derniere],
     );
     demoClients.push({ cid, sid, oid: o.rows[0].id, nom, ouvrageType });
   }

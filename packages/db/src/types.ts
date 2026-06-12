@@ -591,6 +591,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "commandes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "commandes_devis_id_fkey"
             columns: ["devis_id"]
             isOneToOne: false
@@ -610,6 +617,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sites"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commandes_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["site_id"]
           },
         ]
       }
@@ -703,6 +717,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "devis_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "devis_organisation_id_fkey"
             columns: ["organisation_id"]
             isOneToOne: false
@@ -715,6 +736,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sites"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devis_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["site_id"]
           },
         ]
       }
@@ -940,6 +968,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "factures_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "factures_facture_origine_id_fkey"
             columns: ["facture_origine_id"]
             isOneToOne: false
@@ -1100,6 +1135,13 @@ export type Database = {
             referencedRelation: "ouvrages"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "intervention_ouvrages_ouvrage_id_fkey"
+            columns: ["ouvrage_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       interventions: {
@@ -1219,6 +1261,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sites"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["site_id"]
           },
           {
             foreignKeyName: "interventions_tournee_id_fkey"
@@ -1432,6 +1481,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sites"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ouvrages_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["site_id"]
           },
         ]
       }
@@ -1654,6 +1710,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "relances_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "relances_organisation_id_fkey"
             columns: ["organisation_id"]
             isOneToOne: false
@@ -1709,6 +1772,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sites_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "sites_organisation_id_fkey"
@@ -1946,10 +2016,43 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "interventions_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "v_recurrence_ouvrages"
+            referencedColumns: ["site_id"]
+          },
+          {
             foreignKeyName: "interventions_tournee_id_fkey"
             columns: ["tournee_id"]
             isOneToOne: false
             referencedRelation: "tournees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_recurrence_ouvrages: {
+        Row: {
+          client_email: string | null
+          client_id: string | null
+          client_nom: string | null
+          client_telephone: string | null
+          date_derniere_intervention: string | null
+          date_prochaine_echeance: string | null
+          id: string | null
+          organisation_id: string | null
+          relance_active: boolean | null
+          site_adresse: string | null
+          site_id: string | null
+          type: Database["public"]["Enums"]["ouvrage_type"] | null
+          volume_m3: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ouvrages_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -2307,6 +2410,13 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_creer_relance_recurrence: {
+        Args: {
+          p_canal?: Database["public"]["Enums"]["canal_contact"]
+          p_ouvrage_id: string
+        }
+        Returns: string
+      }
       rpc_creer_site: {
         Args: {
           p_adresse: string
@@ -2328,6 +2438,10 @@ export type Database = {
       rpc_facturer_intervention: {
         Args: { p_intervention_id: string }
         Returns: Json
+      }
+      rpc_marquer_relance: {
+        Args: { p_relance_id: string; p_statut: string }
+        Returns: undefined
       }
       rpc_modifier_ouvrage: {
         Args: {

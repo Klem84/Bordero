@@ -9,6 +9,7 @@ import {
   CalendarDays,
   ShieldCheck,
   Receipt,
+  RefreshCw,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -18,6 +19,7 @@ const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/app/clients', label: 'Clients', icon: Users },
   { href: '/app/interventions', label: 'Interventions', icon: Truck },
   { href: '/app/planning', label: 'Planning', icon: CalendarDays },
+  { href: '/app/recurrence', label: 'Récurrence', icon: RefreshCw },
   { href: '/app/conformite', label: 'Conformité', icon: ShieldCheck },
   { href: '/app/facturation', label: 'Facturation', icon: Receipt },
 ];
