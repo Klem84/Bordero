@@ -50,7 +50,14 @@ Schéma complet sur staging (4 migrations), multi-tenant RLS sur toutes les tabl
 - **Écran « Prise de commande rapide »** (`/app/commandes/nouvelle`) : sélection client/site/ouvrage (sites et ouvrages chargés dynamiquement), prestation, options urgence/week-end/volume, **calcul de prix HT/TVA/TTC en direct** (calculerPrixLigneCents). Server Action `creerCommande` qui **recalcule le prix côté serveur** (intégrité) et crée commande + commande_lignes + intervention (+ intervention_ouvrages). Pré-remplissage via `?client=`.
 - Correctif build : `extensionAlias` webpack dans `next.config` pour résoudre les imports `.js`→`.ts` de `@bordero/core` côté client.
 
-Reste sur M1 : CRUD sites/ouvrages depuis la fiche, SIRET pro à la création. Puis cœur réglementaire M4 (PDF BSMV/facture, registre).
+Reste sur M1 : CRUD sites/ouvrages depuis la fiche, SIRET pro à la création.
+
+## Sprint M4 (cœur réglementaire) — en cours
+
+- **Génération PDF opérationnelle et testée** : nouveau package `@bordero/pdf` (@react-pdf/renderer). `renderBsmvPdf()` (BSMV 3 volets, identité vidangeur/installation/matières/destination/signatures) et `renderFacturePdf()` produisent de vrais PDF valides (tests vérifiant l'en-tête `%PDF`).
+- **Builder de bordereau** dans `packages/core` (`construireDonneesBordereau`, routage RG-8.1) avec tests. Total tests : core 22, pdf 2.
+
+Reste sur M4 : Server Action de clôture d'intervention (réservation numéro via RPC + création bordereau EMIS + stockage PDF Supabase Storage + SHA-256), écran Registre filtrable + export CSV, écran Conformité (agréments, quota).
 
 ## Notes techniques
 
