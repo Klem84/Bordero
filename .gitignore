@@ -14,6 +14,10 @@ build/
 .env
 .env.*
 !.env.example
+Acces.txt
+acces.txt
+*.secret
+secrets/
 
 # Mobile (Expo)
 .expo/
