@@ -47,7 +47,10 @@ Schéma complet sur staging (4 migrations), multi-tenant RLS sur toutes les tabl
 - **Formulaire « Nouveau client »** : Server Action + RPC `rpc_creer_client_site` (création atomique client + site avec géocodage), **autocomplétion d'adresse via API Adresse data.gouv** (écrit le `geom` PostGIS).
 - **Fiche client** : synthèse + sites et ouvrages avec prochaines échéances.
 
-Reste sur M1 : écran « Prise de commande rapide » (calcul prix en direct), CRUD sites/ouvrages depuis la fiche, SIRET pro. Puis cœur réglementaire M4 (PDF BSMV/facture, registre).
+- **Écran « Prise de commande rapide »** (`/app/commandes/nouvelle`) : sélection client/site/ouvrage (sites et ouvrages chargés dynamiquement), prestation, options urgence/week-end/volume, **calcul de prix HT/TVA/TTC en direct** (calculerPrixLigneCents). Server Action `creerCommande` qui **recalcule le prix côté serveur** (intégrité) et crée commande + commande_lignes + intervention (+ intervention_ouvrages). Pré-remplissage via `?client=`.
+- Correctif build : `extensionAlias` webpack dans `next.config` pour résoudre les imports `.js`→`.ts` de `@bordero/core` côté client.
+
+Reste sur M1 : CRUD sites/ouvrages depuis la fiche, SIRET pro à la création. Puis cœur réglementaire M4 (PDF BSMV/facture, registre).
 
 ## Notes techniques
 
