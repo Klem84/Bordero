@@ -44,6 +44,16 @@ corepack pnpm@9 --filter web dev
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
 
+## Refonte design (nuit 2)
+
+À ta demande (l'UI était « vieillotte »), refonte complète du back-office avec le skill **impeccable** + tokens OKLCH :
+- **Direction artistique** documentée dans `PRODUCT.md` et `DESIGN.md` (registre « product » : familiarité gagnée, sobre, crédible).
+- **Système de tokens** OKLCH (neutres froids + pétrole de marque, sémantique d'état), polices **Inter** + **JetBrains Mono** (numéros/montants).
+- **App-shell** : barre latérale pétrole profond avec icônes lucide, en-tête utilisateur.
+- **Kit UI** réutilisable : Button, Card, Badge, Input/Field, Table, PageHeader.
+- **Tous les écrans migrés** : connexion (panneau de marque), tableau de bord (tuiles à icônes), clients, interventions, registre, conformité (jauge), bilan, facturation, prise de commande, clôture, facturation.
+- Reste design : vérification visuelle écran par écran (screenshots), responsive mobile (sidebar repliable), micro-animations, charte/logo définitif. À éprouver en lançant `corepack pnpm@9 --filter web dev`.
+
 ## Ce qui reste (par ordre de valeur)
 
 - **App mobile chauffeur (M3)** : non démarrée. C'est le gros morceau restant (Expo, offline-first, tunnel d'intervention). Nécessite un vrai téléphone pour tester.
