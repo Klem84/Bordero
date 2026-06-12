@@ -2,9 +2,12 @@
 
 import { createHash } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { renderFacturePdf, type FactureLigneData } from '@bordero/pdf';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getStripe, isStripeConfigured } from '@/lib/stripe';
 import { getCurrentUser } from '@/lib/auth';
 
 export interface FactureState {
@@ -99,4 +102,131 @@ export async function facturerIntervention(
   revalidatePath('/app/facturation');
   revalidatePath(`/app/interventions/${interventionId}`);
   return { error: null, ok: { numero: res.numero } };
+}
+
+// ============================================================
+// Encaissement par lien de paiement Stripe (mode TEST uniquement)
+// ============================================================
+async function origineUrl(): Promise<string> {
+  const h = await headers();
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
+  const proto = h.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https');
+  return `${proto}://${host}`;
+}
+
+/**
+ * Crée une session Stripe Checkout (mode test) pour le solde dû d'une facture,
+ * puis redirige vers la page de paiement hébergée par Stripe. Le paiement est
+ * enregistré au retour (route /app/facturation/retour-stripe), idempotent.
+ */
+export async function creerSessionPaiement(formData: FormData): Promise<void> {
+  const factureId = String(formData.get('facture_id') ?? '');
+  if (!factureId) return;
+  const user = await getCurrentUser();
+  if (!user?.orgId) return;
+  if (!isStripeConfigured()) redirect('/app/facturation?stripe=indisponible');
+
+  const supabase = await createClient();
+  const { data: facData } = await supabase
+    .from('factures')
+    .select('id, numero, statut, total_ttc_cents, client_id')
+    .eq('id', factureId)
+    .maybeSingle();
+  const fac = one<{
+    id: string;
+    numero: string | null;
+    statut: string;
+    total_ttc_cents: number;
+    client_id: string;
+  }>(facData);
+  if (!fac) redirect('/app/facturation?stripe=erreur');
+  if (fac!.statut === 'brouillon' || fac!.statut === 'payee') {
+    redirect('/app/facturation?stripe=etat');
+  }
+
+  // Solde restant dû = TTC - paiements déjà enregistrés.
+  const { data: paieData } = await supabase
+    .from('paiements')
+    .select('montant_cents')
+    .eq('facture_id', factureId);
+  const dejaPaye = ((paieData ?? []) as { montant_cents: number }[]).reduce(
+    (s, p) => s + Number(p.montant_cents),
+    0,
+  );
+  const reste = Number(fac!.total_ttc_cents) - dejaPaye;
+  if (reste <= 0) redirect('/app/facturation?stripe=etat');
+
+  const { data: cliData } = await supabase
+    .from('clients')
+    .select('nom, email')
+    .eq('id', fac!.client_id)
+    .maybeSingle();
+  const client = one<{ nom: string; email: string | null }>(cliData);
+
+  const origine = await origineUrl();
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.create({
+    mode: 'payment',
+    locale: 'fr',
+    customer_email: client?.email ?? undefined,
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: 'eur',
+          unit_amount: reste,
+          product_data: { name: `Facture ${fac!.numero ?? ''}`.trim() },
+        },
+      },
+    ],
+    metadata: { facture_id: factureId, organisation_id: user.orgId },
+    success_url: `${origine}/app/facturation/retour-stripe?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origine}/app/facturation?stripe=annule`,
+  });
+
+  if (!session.url) redirect('/app/facturation?stripe=erreur');
+  redirect(session.url!);
+}
+
+/**
+ * Enregistre le paiement d'une session Stripe payée (appelé par la route de
+ * retour). Vérifie l'état réel côté Stripe ; idempotent par PaymentIntent.
+ */
+export async function enregistrerPaiementSession(
+  sessionId: string,
+): Promise<{ ok: boolean; numero?: string }> {
+  const user = await getCurrentUser();
+  if (!user?.orgId) return { ok: false };
+  if (!isStripeConfigured()) return { ok: false };
+
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  if (session.payment_status !== 'paid') return { ok: false };
+
+  const factureId = session.metadata?.facture_id;
+  if (!factureId) return { ok: false };
+  const paymentIntent =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : (session.payment_intent?.id ?? null);
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('rpc_enregistrer_paiement', {
+    p_facture_id: factureId,
+    p_montant_cents: session.amount_total ?? 0,
+    p_mode: 'cb',
+    p_reference: session.id,
+    p_stripe_payment_intent: paymentIntent,
+  } as never);
+  if (error) return { ok: false };
+
+  const { data: facData } = await supabase
+    .from('factures')
+    .select('numero')
+    .eq('id', factureId)
+    .maybeSingle();
+  const numero = one<{ numero: string | null }>(facData)?.numero ?? undefined;
+
+  revalidatePath('/app/facturation');
+  return { ok: true, numero: numero ?? undefined };
 }

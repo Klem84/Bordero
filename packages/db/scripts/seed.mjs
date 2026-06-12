@@ -285,6 +285,28 @@ try {
     );
   }
 
+  // Facture émise de démo (pour démontrer l'encaissement Stripe en mode test).
+  // Chemin conforme à l'immuabilité : brouillon -> lignes -> totaux -> émission.
+  {
+    const numero = 'F-2026-90001';
+    const fac = await client.query(
+      `insert into public.factures(organisation_id, client_id, numero, statut, echeance)
+       values ($1,$2,$3,'brouillon', current_date + interval '30 days') returning id`,
+      [DEMO_ORG, demoClients[2].cid, numero],
+    );
+    const facId = fac.rows[0].id;
+    await client.query(
+      `insert into public.facture_lignes(organisation_id, facture_id, designation, quantite, pu_ht_cents, tva_taux, ordre)
+       values ($1,$2,'Pompage bac à graisse',1,15000,20,0)`,
+      [DEMO_ORG, facId],
+    );
+    await client.query(
+      `update public.factures set total_ht_cents=15000, total_tva_cents=3000, total_ttc_cents=18000 where id=$1`,
+      [facId],
+    );
+    await client.query(`update public.factures set statut='emise', emise_le=now() where id=$1`, [facId]);
+  }
+
   await client.query('commit');
   const counts = await client.query(
     `select

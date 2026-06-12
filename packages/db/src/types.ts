@@ -2435,6 +2435,16 @@ export type Database = {
         Args: { p_intervention_id: string }
         Returns: undefined
       }
+      rpc_enregistrer_paiement: {
+        Args: {
+          p_facture_id: string
+          p_mode: Database["public"]["Enums"]["paiement_mode"]
+          p_montant_cents: number
+          p_reference?: string
+          p_stripe_payment_intent?: string
+        }
+        Returns: Json
+      }
       rpc_facturer_intervention: {
         Args: { p_intervention_id: string }
         Returns: Json

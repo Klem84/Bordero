@@ -1,9 +1,13 @@
+import { CreditCard } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card } from '@/components/ui/card';
 import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { FACTURE_STATUT } from '@/lib/statuts';
+import { isStripeConfigured, isStripeTestMode } from '@/lib/stripe';
+import { creerSessionPaiement } from './actions';
 
 interface FactureRow {
   id: string;
@@ -17,7 +21,47 @@ interface FactureRow {
 const euros = (cents: number) =>
   (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
 
-export default async function FacturationPage() {
+const ENCAISSABLE = new Set(['emise', 'envoyee', 'partiellement_payee', 'en_retard']);
+
+function Banniere({ stripe, numero }: { stripe?: string; numero?: string }) {
+  if (!stripe) return null;
+  const map: Record<string, { tone: string; msg: string }> = {
+    paye: {
+      tone: 'border-success/30 bg-success-subtle text-success',
+      msg: `Paiement encaissé${numero ? ` pour la facture ${numero}` : ''}. Facture marquée payée.`,
+    },
+    annule: {
+      tone: 'border-border bg-surface-2 text-ink-muted',
+      msg: 'Paiement annulé. La facture reste en attente de règlement.',
+    },
+    echec: {
+      tone: 'border-danger/30 bg-danger-subtle text-danger',
+      msg: "Le paiement n'a pas pu être confirmé. Réessayez l'encaissement.",
+    },
+    erreur: {
+      tone: 'border-danger/30 bg-danger-subtle text-danger',
+      msg: 'Une erreur est survenue avec Stripe.',
+    },
+    etat: {
+      tone: 'border-border bg-surface-2 text-ink-muted',
+      msg: "Cette facture n'est pas encaissable (brouillon ou déjà payée).",
+    },
+    indisponible: {
+      tone: 'border-warning/30 bg-warning-subtle text-[oklch(0.5_0.13_70)]',
+      msg: 'Encaissement Stripe indisponible : clé non configurée.',
+    },
+  };
+  const b = map[stripe];
+  if (!b) return null;
+  return <div className={`mb-5 rounded-lg border px-4 py-3 text-sm ${b.tone}`}>{b.msg}</div>;
+}
+
+export default async function FacturationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ stripe?: string; numero?: string }>;
+}) {
+  const { stripe, numero } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase
     .from('factures')
@@ -31,10 +75,23 @@ export default async function FacturationPage() {
     .filter((f) => f.statut === 'payee')
     .reduce((s, f) => s + Number(f.total_ttc_cents), 0);
   const totalEmis = factures.reduce((s, f) => s + Number(f.total_ttc_cents), 0);
+  const stripeOn = isStripeConfigured();
 
   return (
     <div>
-      <PageHeader title="Facturation" subtitle="Factures émises et leur statut." />
+      <PageHeader
+        title="Facturation"
+        subtitle="Factures émises, encaissement et suivi des règlements."
+        actions={
+          stripeOn && isStripeTestMode() ? (
+            <Badge tone="info">
+              <CreditCard className="h-3.5 w-3.5" /> Stripe mode test
+            </Badge>
+          ) : null
+        }
+      />
+
+      <Banniere stripe={stripe} numero={numero} />
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:max-w-md">
         <Card className="p-4">
@@ -53,12 +110,13 @@ export default async function FacturationPage() {
           <Th>Date</Th>
           <Th className="text-right">Montant TTC</Th>
           <Th>Statut</Th>
-          <Th className="text-right" />
+          <Th className="text-right">Actions</Th>
         </Thead>
         <Tbody>
           {factures.length > 0 ? (
             factures.map((f) => {
               const s = FACTURE_STATUT[f.statut] ?? { label: f.statut, tone: 'neutral' as const };
+              const encaissable = stripeOn && ENCAISSABLE.has(f.statut);
               return (
                 <Tr key={f.id}>
                   <Td className="font-mono text-xs font-medium">{f.numero ?? '—'}</Td>
@@ -70,13 +128,26 @@ export default async function FacturationPage() {
                     <Badge tone={s.tone}>{s.label}</Badge>
                   </Td>
                   <Td className="text-right">
-                    {f.pdf_url ? (
-                      <a href={`/app/facturation/${f.id}/pdf`} className="font-medium text-brand hover:underline">
-                        PDF
-                      </a>
-                    ) : (
-                      <span className="text-ink-muted/50">—</span>
-                    )}
+                    <div className="flex items-center justify-end gap-3">
+                      {encaissable ? (
+                        <form action={creerSessionPaiement}>
+                          <input type="hidden" name="facture_id" value={f.id} />
+                          <Button type="submit" variant="secondary" size="sm">
+                            <CreditCard className="h-4 w-4" /> Encaisser
+                          </Button>
+                        </form>
+                      ) : null}
+                      {f.pdf_url ? (
+                        <a
+                          href={`/app/facturation/${f.id}/pdf`}
+                          className="font-medium text-brand hover:underline"
+                        >
+                          PDF
+                        </a>
+                      ) : (
+                        <span className="text-ink-muted/50">—</span>
+                      )}
+                    </div>
                   </Td>
                 </Tr>
               );
