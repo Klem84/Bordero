@@ -48,6 +48,11 @@ corepack pnpm@9 --filter web dev
 - Vue de lecture `v_planning_interventions` (security_invoker, RLS respectée) qui agrège client, adresse, prestation, ouvrage, durée et volume estimé.
 - Vérifié : build OK, tests RPC fonctionnels (affectation BROUILLON→PLANIFIEE, réordonnancement, désaffectation, rejet inter-organisations), 9/9 RLS toujours verts.
 
+**CRUD sites & ouvrages (nuit 3)**
+- Fiche client : section « Sites et ouvrages » entièrement interactive (ajout, édition, suppression de sites et d'ouvrages en ligne, avec confirmation). L'adresse d'un site est géocodée (composant `AddressAutocomplete` réutilisable, extrait du formulaire client).
+- L'échéance d'entretien d'un ouvrage est calculée côté serveur (A4 : dernière intervention + périodicité), la périodicité est préremplie selon le type d'ouvrage. Les ouvrages en retard sont signalés.
+- Écritures via RPC SECURITY DEFINER cloisonnées par organisation (`rpc_creer/modifier/supprimer_site` et `…_ouvrage`). Suppression d'un site refusée s'il porte des interventions (intégrité). Testé fonctionnellement (geom, échéance, garde de suppression).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
@@ -69,7 +74,7 @@ corepack pnpm@9 --filter web dev
 - **Récurrence & relances (M6)** : moteur A4, écran CA dormant détaillé, portail client (lot 2).
 - **Encaissement Stripe** : clés test câblées, intégration paiement à faire.
 - **Trackdéchets (BSDD)** : lot 2.
-- Détails : CRUD sites/ouvrages depuis la fiche, SIRET pro à la création, charte graphique, commune réelle dans le bilan (actuellement « Non précisé » faute de jointure intervention→site sur les bordereaux de démo).
+- Détails : SIRET pro à la création, charte graphique, commune réelle dans le bilan (actuellement « Non précisé » faute de jointure intervention→site sur les bordereaux de démo). CRUD sites/ouvrages depuis la fiche : ✅ fait (nuit 3).
 
 ## Actions qui requièrent ta main
 
