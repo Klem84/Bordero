@@ -357,6 +357,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bordereaux_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "v_planning_interventions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bordereaux_organisation_id_fkey"
             columns: ["organisation_id"]
             isOneToOne: false
@@ -947,6 +954,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "factures_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "v_planning_interventions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "factures_organisation_id_fkey"
             columns: ["organisation_id"]
             isOneToOne: false
@@ -1005,6 +1019,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "intervention_events_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "v_planning_interventions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "intervention_events_organisation_id_fkey"
             columns: ["organisation_id"]
             isOneToOne: false
@@ -1056,6 +1077,13 @@ export type Database = {
             columns: ["intervention_id"]
             isOneToOne: false
             referencedRelation: "interventions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intervention_ouvrages_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "v_planning_interventions"
             referencedColumns: ["id"]
           },
           {
@@ -1874,6 +1902,58 @@ export type Database = {
         }
         Relationships: []
       }
+      v_planning_interventions: {
+        Row: {
+          camion_id: string | null
+          client_nom: string | null
+          client_type: Database["public"]["Enums"]["client_type"] | null
+          date_prevue: string | null
+          duree_min: number | null
+          fenetre: Database["public"]["Enums"]["fenetre_horaire"] | null
+          heure_precise: string | null
+          id: string | null
+          ordre_passage: number | null
+          organisation_id: string | null
+          ouvrage_type: Database["public"]["Enums"]["ouvrage_type"] | null
+          prestation_label: string | null
+          site_adresse: string | null
+          site_id: string | null
+          status: Database["public"]["Enums"]["intervention_status"] | null
+          tournee_id: string | null
+          urgence: boolean | null
+          volume_estime_m3: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interventions_camion_id_fkey"
+            columns: ["camion_id"]
+            isOneToOne: false
+            referencedRelation: "camions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_tournee_id_fkey"
+            columns: ["tournee_id"]
+            isOneToOne: false
+            referencedRelation: "tournees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _postgis_deprecate: {
@@ -2192,6 +2272,10 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_affecter_intervention: {
+        Args: { p_camion_id: string; p_date: string; p_intervention_id: string }
+        Returns: undefined
+      }
       rpc_clore_intervention: {
         Args: {
           p_exutoire_id?: string
@@ -2211,6 +2295,14 @@ export type Database = {
           p_type: Database["public"]["Enums"]["client_type"]
         }
         Returns: string
+      }
+      rpc_deplacer_intervention: {
+        Args: { p_intervention_id: string; p_sens: number }
+        Returns: undefined
+      }
+      rpc_desaffecter_intervention: {
+        Args: { p_intervention_id: string }
+        Returns: undefined
       }
       rpc_facturer_intervention: {
         Args: { p_intervention_id: string }

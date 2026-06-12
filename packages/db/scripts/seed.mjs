@@ -61,8 +61,17 @@ console.log('Utilisateur de démo prêt :', DEMO_EMAIL);
 await client.connect();
 try {
   await client.query('begin');
-  // Reset de l'org de démo (cascade sur toutes les données liées).
+  // Reset de l'org de démo (cascade sur toutes les données liées). Les triggers
+  // d'immuabilité (RG-2.1) bloquent la suppression des bordereaux/factures émis :
+  // on les désactive le temps du reset (connexion postgres superuser). Les triggers
+  // FK système restent actifs, donc le ON DELETE CASCADE fonctionne.
+  await client.query('alter table public.bordereaux disable trigger user');
+  await client.query('alter table public.factures disable trigger user');
+  await client.query('alter table public.facture_lignes disable trigger user');
   await client.query('delete from public.organisations where id = $1', [DEMO_ORG]);
+  await client.query('alter table public.bordereaux enable trigger user');
+  await client.query('alter table public.factures enable trigger user');
+  await client.query('alter table public.facture_lignes enable trigger user');
 
   await client.query(
     `insert into public.organisations(id, raison_sociale, siret, adresse)
@@ -85,14 +94,16 @@ try {
     ['Débouchage urgence', 12000, 50, 25, null, null, 60, 'DECHET_NON_DANGEREUX_HORS_ANC'],
   ];
   let ordre = 0;
+  const prestationIds = {};
   for (const [libelle, base, urg, we, forfait, m3sup, duree, classif] of prestations) {
-    await client.query(
+    const p = await client.query(
       `insert into public.prestations(organisation_id, libelle, prix_base_cents, majoration_urgence_pct,
          majoration_weekend_pct, volume_forfait_m3, prix_m3_supplementaire_cents, duree_standard_min,
          classification_dechet, ordre)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id`,
       [DEMO_ORG, libelle, base, urg, we, forfait, m3sup, duree, classif, ordre++],
     );
+    prestationIds[libelle] = p.rows[0].id;
   }
 
   // Clients + sites (géolocalisés autour de Rodez) + ouvrages
@@ -102,6 +113,7 @@ try {
     ['professionnel', 'Restaurant Le Causse', '05 65 11 22 33', 'contact@lecausse.fr', '3 place de la Cité, 12000 Rodez', 2.5751, 44.3491, 'BAC_A_GRAISSE', 500],
     ['professionnel', 'Garage Aveyron Auto', '05 65 44 55 66', null, "ZA de Bel Air, 12510 Olemps", 2.5402, 44.3338, 'SEPARATEUR_HYDROCARBURES', 2000],
   ];
+  const demoClients = [];
   for (const [type, nom, tel, email, adresse, lng, lat, ouvrageType, volume] of clients) {
     const c = await client.query(
       `insert into public.clients(organisation_id, type, nom, telephone, email)
@@ -117,12 +129,117 @@ try {
     const sid = s.rows[0].id;
     const periodicite =
       ouvrageType === 'BAC_A_GRAISSE' ? 6 : ouvrageType === 'SEPARATEUR_HYDROCARBURES' ? 12 : 48;
-    await client.query(
+    const o = await client.query(
       `insert into public.ouvrages(organisation_id, site_id, type, volume_nominal_litres, periodicite_mois, date_derniere_intervention)
-       values ($1,$2,$3,$4,$5, current_date - interval '40 months')`,
+       values ($1,$2,$3,$4,$5, current_date - interval '40 months') returning id`,
       [DEMO_ORG, sid, ouvrageType, volume, periodicite],
     );
+    demoClients.push({ cid, sid, oid: o.rows[0].id, nom, ouvrageType });
   }
+
+  // Parc de camions (capacité citerne pour le planning)
+  const camions = [
+    ['AV-742-RZ', 'hydrocureur', 12],
+    ['BX-318-VG', 'citerne_simple', 8],
+    ['CD-905-AY', 'combine', 6],
+  ];
+  const camionIds = [];
+  for (const [immat, typeCam, capacite] of camions) {
+    const cam = await client.query(
+      `insert into public.camions(organisation_id, immatriculation, type, capacite_citerne_m3,
+         controle_technique_echeance, adr_validite, actif)
+       values ($1,$2,$3,$4, current_date + interval '8 months', current_date + interval '14 months', true)
+       returning id`,
+      [DEMO_ORG, immat, typeCam, capacite],
+    );
+    camionIds.push(cam.rows[0].id);
+  }
+
+  // Exutoire (filière d'élimination) pour la clôture des bordereaux
+  await client.query(
+    `insert into public.exutoires(organisation_id, raison_sociale, type, adresse)
+     values ($1,'STEP de Rodez Agglomération','station_epuration','Route de Sébazac, 12000 Rodez')`,
+    [DEMO_ORG],
+  );
+
+  // Interventions de démonstration pour le planning.
+  // Quelques-unes en file d'attente (BROUILLON, sans tournée), d'autres déjà
+  // affectées aux tournées du jour et du lendemain.
+  const fmtDate = (d) => d.toISOString().slice(0, 10);
+  const _today = new Date();
+  const _tomorrow = new Date();
+  _tomorrow.setDate(_tomorrow.getDate() + 1);
+  const TODAY = fmtDate(_today);
+  const TOMORROW = fmtDate(_tomorrow);
+
+  const presta = (libelle) => prestationIds[libelle];
+  const prestaForOuvrage = (t) =>
+    t === 'BAC_A_GRAISSE'
+      ? 'Pompage bac à graisse'
+      : t === 'SEPARATEUR_HYDROCARBURES'
+        ? 'Nettoyage séparateur hydrocarbures'
+        : 'Vidange fosse toutes eaux';
+
+  async function creerIntervention({ dc, urgence = false, date = null, camionIdx = null, ordrePassage = null }) {
+    const cmd = await client.query(
+      `insert into public.commandes(organisation_id, client_id, site_id, urgence)
+       values ($1,$2,$3,$4) returning id`,
+      [DEMO_ORG, dc.cid, dc.sid, urgence],
+    );
+    const cmdId = cmd.rows[0].id;
+    const libelle = prestaForOuvrage(dc.ouvrageType);
+    await client.query(
+      `insert into public.commande_lignes(organisation_id, commande_id, prestation_id, designation, quantite, prix_ht_cents)
+       values ($1,$2,$3,$4,1,25000)`,
+      [DEMO_ORG, cmdId, presta(libelle), libelle],
+    );
+
+    let tourneeId = null;
+    if (date && camionIdx != null) {
+      const t = await client.query(
+        `insert into public.tournees(organisation_id, camion_id, date_tournee)
+         values ($1,$2,$3)
+         on conflict (organisation_id, camion_id, date_tournee) do update set updated_at = now()
+         returning id`,
+        [DEMO_ORG, camionIds[camionIdx], date],
+      );
+      tourneeId = t.rows[0].id;
+    }
+    const status = tourneeId ? 'PLANIFIEE' : 'BROUILLON';
+    const intv = await client.query(
+      `insert into public.interventions(organisation_id, commande_id, site_id, status, urgence,
+         tournee_id, camion_id, date_prevue, ordre_passage)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id`,
+      [
+        DEMO_ORG,
+        cmdId,
+        dc.sid,
+        status,
+        urgence,
+        tourneeId,
+        tourneeId ? camionIds[camionIdx] : null,
+        date,
+        ordrePassage,
+      ],
+    );
+    await client.query(
+      `insert into public.intervention_ouvrages(organisation_id, intervention_id, ouvrage_id)
+       values ($1,$2,$3)`,
+      [DEMO_ORG, intv.rows[0].id, dc.oid],
+    );
+  }
+
+  // File d'attente (à planifier)
+  await creerIntervention({ dc: demoClients[0], urgence: true });
+  await creerIntervention({ dc: demoClients[2] });
+  await creerIntervention({ dc: demoClients[3] });
+  // Tournée du jour, camion 1
+  await creerIntervention({ dc: demoClients[1], date: TODAY, camionIdx: 0, ordrePassage: 1 });
+  await creerIntervention({ dc: demoClients[2], date: TODAY, camionIdx: 0, ordrePassage: 2 });
+  // Tournée du jour, camion 2
+  await creerIntervention({ dc: demoClients[3], date: TODAY, camionIdx: 1, ordrePassage: 1 });
+  // Tournée du lendemain, camion 1
+  await creerIntervention({ dc: demoClients[0], date: TOMORROW, camionIdx: 0, ordrePassage: 1 });
 
   // Agrément préfectoral actif (Aveyron)
   await client.query(
