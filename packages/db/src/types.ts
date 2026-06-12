@@ -2192,6 +2192,14 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_clore_intervention: {
+        Args: {
+          p_exutoire_id?: string
+          p_intervention_id: string
+          p_quantite_m3?: number
+        }
+        Returns: Json
+      }
       rpc_creer_client_site: {
         Args: {
           p_adresse: string

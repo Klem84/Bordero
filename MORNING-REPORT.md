@@ -57,7 +57,12 @@ Reste sur M1 : CRUD sites/ouvrages depuis la fiche, SIRET pro à la création.
 - **Génération PDF opérationnelle et testée** : nouveau package `@bordero/pdf` (@react-pdf/renderer). `renderBsmvPdf()` (BSMV 3 volets, identité vidangeur/installation/matières/destination/signatures) et `renderFacturePdf()` produisent de vrais PDF valides (tests vérifiant l'en-tête `%PDF`).
 - **Builder de bordereau** dans `packages/core` (`construireDonneesBordereau`, routage RG-8.1) avec tests. Total tests : core 22, pdf 2.
 
-Reste sur M4 : Server Action de clôture d'intervention (réservation numéro via RPC + création bordereau EMIS + stockage PDF Supabase Storage + SHA-256), écran Registre filtrable + export CSV, écran Conformité (agréments, quota).
+- **Clôture d'intervention de bout en bout** : RPC `rpc_clore_intervention` (SECURITY DEFINER) qui avance l'intervention jusqu'à TERMINEE, applique le routage documentaire (RG-8.1), réserve un numéro continu et crée le bordereau EMIS. **Testée end-to-end** (test-rls.mjs, 8/8).
+- **Server Action de clôture** (apps/web) : appelle la RPC, génère le PDF BSMV, calcule le SHA-256 (node:crypto), l'archive dans le **bucket privé Storage `documents`** (créé), met à jour `pdf_url`/`pdf_sha256`. Pages : liste interventions, détail intervention avec bouton « Clôturer et générer le bordereau ».
+- **Registre** (`/app/conformite/registre`) : tableau filtrable (statut, période), **export CSV** (route handler).
+- Bucket Storage `documents` privé créé via la clé secrète (qui marche pour Storage et l'API admin auth, pas pour PostgREST).
+
+Reste sur M4 : écran Conformité (coffre-fort agréments, jauge de quota), URL signée de téléchargement du PDF depuis le registre, bilan annuel (A3).
 
 ## Notes techniques
 

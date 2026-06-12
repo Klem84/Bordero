@@ -10,7 +10,8 @@ loadEnv({ path: resolve(root, '.env.local') });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@bordero/core', '@bordero/db'],
+  transpilePackages: ['@bordero/core', '@bordero/db', '@bordero/pdf'],
+  serverExternalPackages: ['@react-pdf/renderer'],
   webpack: (config) => {
     // Les packages internes utilisent des imports ESM avec extension .js qui
     // pointent vers des sources .ts ; on l'indique à webpack.

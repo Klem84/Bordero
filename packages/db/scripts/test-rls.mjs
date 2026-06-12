@@ -169,6 +169,38 @@ try {
   await client.query('rollback');
 }
 
+// --- Test 5 : clôture d'intervention (RPC) end-to-end ---
+await client.query('begin');
+try {
+  const o = await client.query(`insert into public.organisations(raison_sociale) values('CLOT') returning id`);
+  const org = o.rows[0].id;
+  const c = await client.query(`insert into public.clients(organisation_id, nom) values($1,'C') returning id`, [org]);
+  const s = await client.query(
+    `insert into public.sites(organisation_id, client_id, adresse) values($1,$2,'A') returning id`,
+    [org, c.rows[0].id],
+  );
+  await client.query('set local role authenticated');
+  await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+    JSON.stringify({ org_id: org, app_role: 'admin', sub: '00000000-0000-4000-8000-00000000000c' }),
+  ]);
+  const i = await client.query(
+    `insert into public.interventions(organisation_id, site_id, status) values($1,$2,'PLANIFIEE') returning id`,
+    [org, s.rows[0].id],
+  );
+  const r = await client.query(`select public.rpc_clore_intervention($1, null, 2.0) as res`, [i.rows[0].id]);
+  await client.query('reset role');
+  const res = r.rows[0].res;
+  if (res?.numero && res?.type === 'BSMV') {
+    ok(`clôture RPC : bordereau ${res.numero} (EMIS) généré`);
+  } else {
+    ko('clôture RPC', JSON.stringify(res));
+  }
+} catch (e) {
+  ko('clôture RPC (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
 await client.end();
 
 if (failures.length) {

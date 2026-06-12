@@ -29,6 +29,9 @@ importers:
       '@bordero/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@bordero/pdf':
+        specifier: workspace:*
+        version: link:../../packages/pdf
       '@supabase/ssr':
         specifier: ^0.5.2
         version: 0.5.2(@supabase/supabase-js@2.108.1)

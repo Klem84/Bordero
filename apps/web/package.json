@@ -13,6 +13,7 @@
   "dependencies": {
     "@bordero/core": "workspace:*",
     "@bordero/db": "workspace:*",
+    "@bordero/pdf": "workspace:*",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.46.1",
     "next": "^15.1.3",
