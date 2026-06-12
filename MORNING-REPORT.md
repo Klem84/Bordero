@@ -53,6 +53,13 @@ corepack pnpm@9 --filter web dev
 - L'échéance d'entretien d'un ouvrage est calculée côté serveur (A4 : dernière intervention + périodicité), la périodicité est préremplie selon le type d'ouvrage. Les ouvrages en retard sont signalés.
 - Écritures via RPC SECURITY DEFINER cloisonnées par organisation (`rpc_creer/modifier/supprimer_site` et `…_ouvrage`). Suppression d'un site refusée s'il porte des interventions (intégrité). Testé fonctionnellement (geom, échéance, garde de suppression).
 
+**M6 — Récurrence : CA dormant & relances (nuit 3)**
+- Écran `/app/recurrence` : KPI (CA dormant valorisé, installations en retard, échéances proches), tableau des installations à relancer (statut d'échéance en retard/bientôt/à jour, valeur estimée au m³, planification de relance en un clic, raccourci vers la prise de commande), et liste des relances planifiées (traiter / annuler).
+- Moteur d'échéance (A4) fiabilisé : un trigger calcule `date_prochaine_echeance` (dernière intervention + périodicité) quand elle n'est pas fournie, avec backfill des ouvrages existants. La vue `v_recurrence_ouvrages` (security_invoker) agrège client, site, volume, statut et présence d'une relance active.
+- Relances : RPC `rpc_creer_relance_recurrence` (planifie la relance + crée une tâche bureau) et `rpc_marquer_relance` (traitée/annulée, solde la tâche). **Aucun envoi réel d'email/SMS** (garde-fou MVP) : la relance reste « planifiée » jusqu'à traitement manuel.
+- Entrée « Récurrence » dans la barre latérale ; la tuile CA dormant du tableau de bord pointe désormais vers cet écran. Seed calé pour illustrer les trois statuts d'échéance.
+- Vérifié : build OK, 9/9 RLS, 36 core, RPC testés (relance + tâche, traitement, statut invalide rejeté, cloisonnement inter-organisations).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
@@ -71,7 +78,7 @@ corepack pnpm@9 --filter web dev
 
 - **App mobile chauffeur (M3)** : non démarrée. C'est le gros morceau restant (Expo, offline-first, tunnel d'intervention). Nécessite un vrai téléphone pour tester.
 - **Planning/dispatch (M2)** : ✅ écran d'affectation jour × camion + file d'attente livré (voir nuit 3). Restent en option : glisser-déposer, carte/itinéraire, et CRUD du parc camions depuis l'UI (aujourd'hui via seed).
-- **Récurrence & relances (M6)** : moteur A4, écran CA dormant détaillé, portail client (lot 2).
+- **Récurrence & relances (M6)** : ✅ moteur A4 (trigger d'échéance), écran CA dormant détaillé et relances livrés (nuit 3). Restent : envoi réel des relances (email/SMS, hors garde-fou), séquence R1/R2/R3 automatisée via pg_cron, portail client (lot 2).
 - **Encaissement Stripe** : clés test câblées, intégration paiement à faire.
 - **Trackdéchets (BSDD)** : lot 2.
 - Détails : SIRET pro à la création, charte graphique, commune réelle dans le bilan (actuellement « Non précisé » faute de jointure intervention→site sur les bordereaux de démo). CRUD sites/ouvrages depuis la fiche : ✅ fait (nuit 3).
