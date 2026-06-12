@@ -26,10 +26,17 @@ Session autonome démarrée le 2026-06-12 au soir. Objectif : Sprint 1 (socle do
 - **Migration 0003 — Opérations** appliquée : `devis`, `devis_lignes`, `commandes`, `tournees`, `interventions`, `intervention_ouvrages`, `intervention_events`. Machine à états de l'intervention **en base** (trigger `check_intervention_transition`, identique à packages/core). RLS multi-tenant (le chauffeur exécute ses interventions, l'exploitation gère).
 - **Tests de sécurité DB** (`packages/db/scripts/test-rls.mjs`, lançable via `pnpm --filter @bordero/db test:rls`) : ✅ isolation multi-tenant RLS (org A ne voit pas org B) + ✅ machine à états (transition illégale rejetée). Tous passés.
 
+- **Migration 0004 — Réglementaire** appliquée : `bordereaux` (+ signatures, immuabilité), `plages_numeros`, `compteurs` + fonctions `prochain_numero`/`reserver_numero` (RG-8.3), `factures` + `facture_lignes` + `paiements` (immuabilité RG-9.1, avoirs), `relances`, `notifications`, `taches`, `jobs_outbox`. Audit sur bordereaux et factures.
+- **Tests de sécurité DB étendus (7/7 verts)** : isolation RLS, machine à états, numérotation continue sans trou, transition bordereau illégale rejetée, bordereau bouclé non modifiable, bordereau non supprimable.
+
+## ✅ Sprint 1 (socle de données) : COMPLET
+
+Schéma complet sur staging (4 migrations), multi-tenant RLS sur toutes les tables, immuabilité réglementaire, numérotation continue, machine à états en base, audit, hook d'auth actif. C'est le jalon le plus structurant : il est posé et testé.
+
 ## En cours
 
-- Sprint 1 — dernier bloc : objets réglementaires (bordereaux + signatures + plages_numeros, factures + lignes + paiements + avoirs) avec immuabilité (append-only) et numérotation continue (RG-8.3).
-- Ensuite : Sprint 2 (M1, back-office Next.js) et début du cœur réglementaire M4.
+- Sprint 2 (M1) : back-office Next.js (apps/web) — clients, ouvrages, prise de commande.
+- Puis cœur réglementaire M4 (numérotation serveur, gabarits PDF BSMV/facture, registre).
 
 ## Notes techniques
 

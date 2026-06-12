@@ -98,6 +98,77 @@ try {
   await client.query('rollback');
 }
 
+// --- Test 3 : numérotation continue (RG-8.3) ---
+await client.query('begin');
+try {
+  const o = await client.query(`insert into public.organisations(raison_sociale) values('NUM') returning id`);
+  const org = o.rows[0].id;
+  const nums = [];
+  for (let i = 0; i < 3; i++) {
+    const r = await client.query(`select public.prochain_numero($1,'BSMV',2026) as n`, [org]);
+    nums.push(r.rows[0].n);
+  }
+  if (nums.join(',') === '1,2,3') ok('numérotation continue : 1, 2, 3 sans trou');
+  else ko('numérotation continue', nums.join(','));
+} catch (e) {
+  ko('numérotation (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
+// --- Test 4 : immuabilité du bordereau (RG-2.1) ---
+await client.query('begin');
+try {
+  const o = await client.query(`insert into public.organisations(raison_sociale) values('IMM') returning id`);
+  const org = o.rows[0].id;
+  const b = await client.query(
+    `insert into public.bordereaux(organisation_id, type, numero, statut) values($1,'BSMV','BSMV-2026-00001','EMIS') returning id`,
+    [org],
+  );
+  const bid = b.rows[0].id;
+  // transition illégale directe EMIS -> BOUCLE
+  let illegalRejected = false;
+  await client.query('savepoint s1');
+  try {
+    await client.query(`update public.bordereaux set statut='BOUCLE' where id=$1`, [bid]);
+  } catch {
+    illegalRejected = true;
+    await client.query('rollback to savepoint s1');
+  }
+  if (illegalRejected) ok('bordereau : transition illégale EMIS → BOUCLE rejetée');
+  else ko('bordereau transition', 'EMIS → BOUCLE acceptée');
+  // parcours légal jusqu'à BOUCLE
+  await client.query(`update public.bordereaux set statut='SIGNE_CLIENT' where id=$1`, [bid]);
+  await client.query(`update public.bordereaux set statut='DEPOSE' where id=$1`, [bid]);
+  await client.query(`update public.bordereaux set statut='BOUCLE' where id=$1`, [bid]);
+  // UPDATE d'un bordereau bouclé -> rejet
+  let updRejected = false;
+  await client.query('savepoint s2');
+  try {
+    await client.query(`update public.bordereaux set nature_matiere='x' where id=$1`, [bid]);
+  } catch {
+    updRejected = true;
+    await client.query('rollback to savepoint s2');
+  }
+  if (updRejected) ok('bordereau bouclé : UPDATE rejeté (immuable)');
+  else ko('bordereau immuable (update)', 'UPDATE accepté');
+  // DELETE d'un bordereau -> rejet
+  let delRejected = false;
+  await client.query('savepoint s3');
+  try {
+    await client.query(`delete from public.bordereaux where id=$1`, [bid]);
+  } catch {
+    delRejected = true;
+    await client.query('rollback to savepoint s3');
+  }
+  if (delRejected) ok('bordereau : DELETE rejeté (jamais de suppression physique)');
+  else ko('bordereau immuable (delete)', 'DELETE accepté');
+} catch (e) {
+  ko('immuabilité bordereau (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
 await client.end();
 
 if (failures.length) {
