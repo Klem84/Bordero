@@ -74,7 +74,13 @@ Reste sur M1 : CRUD sites/ouvrages depuis la fiche, SIRET pro à la création.
 - DB (`pnpm --filter @bordero/db test:rls`) : **9/9 verts** (isolation RLS, machine à états, numérotation, immuabilité bordereau, clôture, facturation).
 - Unitaires (`pnpm -r test`) : core 22, pdf 2.
 
-Reste : écran Conformité (coffre-fort agréments, jauge de quota), bilan annuel (A3), dashboard avec vraies données, app mobile Expo, encaissement Stripe.
+## Conformité + tableau de bord — fait
+
+- **Écran Conformité** (`/app/conformite`) : agréments avec **jauge de quota** (m³ pompés/an vs max, seuils 70/85/100 % colorés), statut d'échéance, bordereaux à régulariser (> 48 h). Logique `statutQuota`/`statutEcheance`/`valoriserCaDormant` dans `packages/core` + tests.
+- **Tableau de bord vivant** (`/app`) : 6 tuiles alimentées par de vraies données (interventions du jour, conformité, trésorerie encaissée, CA dormant valorisé, m³ du mois, file d'attente), cliquables.
+- Seed enrichi : agrément actif Aveyron (quota 500 m³) + 3 bordereaux bouclés de démo.
+
+Reste : bilan annuel (A3), CRUD sites/ouvrages depuis la fiche, app mobile Expo, encaissement Stripe, relances/récurrence (M6).
 
 ## Notes techniques
 

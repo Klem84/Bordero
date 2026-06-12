@@ -3,3 +3,4 @@ export * from './documents/routing.js';
 export * from './documents/bordereau.js';
 export * from './ouvrage/periodicite.js';
 export * from './tarification/prix.js';
+export * from './conformite/quota.js';

@@ -124,6 +124,28 @@ try {
     );
   }
 
+  // Agrément préfectoral actif (Aveyron)
+  await client.query(
+    `insert into public.agrements(organisation_id, departement_code, departement_libelle, numero,
+       date_delivrance, date_echeance, quantite_max_annuelle_m3, statut)
+     values ($1,'12','Aveyron','AG-12-001','2022-01-01','2032-01-01',500,'actif')`,
+    [DEMO_ORG],
+  );
+
+  // Bordereaux bouclés de démo (alimentent le registre et la jauge de quota)
+  const bsmv = [
+    ['BSMV-2026-90001', 2.5],
+    ['BSMV-2026-90002', 4.0],
+    ['BSMV-2026-90003', 3.5],
+  ];
+  for (const [numero, q] of bsmv) {
+    await client.query(
+      `insert into public.bordereaux(organisation_id, type, numero, statut, nature_matiere, quantite_pompee_m3, quantite_depotee_m3)
+       values ($1,'BSMV',$2,'BOUCLE','Matières de vidange ANC',$3,$3)`,
+      [DEMO_ORG, numero, q],
+    );
+  }
+
   await client.query('commit');
   const counts = await client.query(
     `select
