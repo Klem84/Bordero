@@ -62,12 +62,20 @@ export default async function ConformitePage() {
           <h1 className="text-2xl font-bold text-slate-900">Conformité</h1>
           <p className="text-sm text-slate-500">Agréments, quotas et bordereaux à régulariser.</p>
         </div>
-        <Link
-          href="/app/conformite/registre"
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
-          Registre des bordereaux →
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/app/conformite/bilan"
+            className="rounded-lg bg-bordero px-4 py-2 text-sm font-medium text-white hover:bg-bordero-500"
+          >
+            Bilan annuel
+          </Link>
+          <Link
+            href="/app/conformite/registre"
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Registre →
+          </Link>
+        </div>
       </div>
 
       <section className="mb-8">
