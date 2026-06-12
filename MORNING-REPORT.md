@@ -42,7 +42,12 @@ Schéma complet sur staging (4 migrations), multi-tenant RLS sur toutes les tabl
 - **Types DB générés** (`packages/db/src/types.ts`, 33 tables) via l'API hébergée (l'access token évite Docker), exposés par `@bordero/db`.
 - **Module tarification** dans `packages/core` (calcul prix + majorations + TVA, CDC §5.1) avec tests. Total tests core : 17 verts.
 
-Reste sur M1 : fiche client (onglets), formulaires CRUD clients/sites/ouvrages, écran « Prise de commande rapide » avec calcul en direct, autocomplétion adresse (API Adresse data.gouv) et SIRET.
+- **Catalogue prestations** (migration 0005) + table `commande_lignes`, RLS.
+- **Seed de démo** (`packages/db/scripts/seed.mjs`) : organisation « Vidanges Démo Aveyron », utilisateur admin connectable, 5 prestations, 4 clients géolocalisés avec ouvrages. **Identifiants de démo : `admin@bordero-demo.fr` / `BorderoDemo2026!`** (staging).
+- **Formulaire « Nouveau client »** : Server Action + RPC `rpc_creer_client_site` (création atomique client + site avec géocodage), **autocomplétion d'adresse via API Adresse data.gouv** (écrit le `geom` PostGIS).
+- **Fiche client** : synthèse + sites et ouvrages avec prochaines échéances.
+
+Reste sur M1 : écran « Prise de commande rapide » (calcul prix en direct), CRUD sites/ouvrages depuis la fiche, SIRET pro. Puis cœur réglementaire M4 (PDF BSMV/facture, registre).
 
 ## Notes techniques
 

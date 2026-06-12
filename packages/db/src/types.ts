@@ -480,6 +480,64 @@ export type Database = {
           },
         ]
       }
+      commande_lignes: {
+        Row: {
+          commande_id: string
+          designation: string
+          id: string
+          ordre: number
+          organisation_id: string
+          prestation_id: string | null
+          prix_ht_cents: number
+          quantite: number
+          tva_taux: number
+        }
+        Insert: {
+          commande_id: string
+          designation: string
+          id?: string
+          ordre?: number
+          organisation_id: string
+          prestation_id?: string | null
+          prix_ht_cents?: number
+          quantite?: number
+          tva_taux?: number
+        }
+        Update: {
+          commande_id?: string
+          designation?: string
+          id?: string
+          ordre?: number
+          organisation_id?: string
+          prestation_id?: string | null
+          prix_ht_cents?: number
+          quantite?: number
+          tva_taux?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commande_lignes_commande_id_fkey"
+            columns: ["commande_id"]
+            isOneToOne: false
+            referencedRelation: "commandes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commande_lignes_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commande_lignes_prestation_id_fkey"
+            columns: ["prestation_id"]
+            isOneToOne: false
+            referencedRelation: "prestations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commandes: {
         Row: {
           client_id: string
@@ -1454,6 +1512,71 @@ export type Database = {
           },
         ]
       }
+      prestations: {
+        Row: {
+          actif: boolean
+          classification_dechet: Database["public"]["Enums"]["dechet_classification"]
+          created_at: string
+          created_by: string | null
+          duree_standard_min: number
+          id: string
+          libelle: string
+          majoration_urgence_pct: number
+          majoration_weekend_pct: number
+          ordre: number
+          organisation_id: string
+          prix_base_cents: number
+          prix_m3_supplementaire_cents: number | null
+          tva_taux: number
+          updated_at: string
+          volume_forfait_m3: number | null
+        }
+        Insert: {
+          actif?: boolean
+          classification_dechet?: Database["public"]["Enums"]["dechet_classification"]
+          created_at?: string
+          created_by?: string | null
+          duree_standard_min?: number
+          id?: string
+          libelle: string
+          majoration_urgence_pct?: number
+          majoration_weekend_pct?: number
+          ordre?: number
+          organisation_id: string
+          prix_base_cents?: number
+          prix_m3_supplementaire_cents?: number | null
+          tva_taux?: number
+          updated_at?: string
+          volume_forfait_m3?: number | null
+        }
+        Update: {
+          actif?: boolean
+          classification_dechet?: Database["public"]["Enums"]["dechet_classification"]
+          created_at?: string
+          created_by?: string | null
+          duree_standard_min?: number
+          id?: string
+          libelle?: string
+          majoration_urgence_pct?: number
+          majoration_weekend_pct?: number
+          ordre?: number
+          organisation_id?: string
+          prix_base_cents?: number
+          prix_m3_supplementaire_cents?: number | null
+          tva_taux?: number
+          updated_at?: string
+          volume_forfait_m3?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prestations_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       relances: {
         Row: {
           canal: Database["public"]["Enums"]["canal_contact"] | null
@@ -2066,6 +2189,18 @@ export type Database = {
           p_org: string
           p_prefix: string
           p_type: string
+        }
+        Returns: string
+      }
+      rpc_creer_client_site: {
+        Args: {
+          p_adresse: string
+          p_email: string
+          p_lat: number
+          p_lng: number
+          p_nom: string
+          p_telephone: string
+          p_type: Database["public"]["Enums"]["client_type"]
         }
         Returns: string
       }
