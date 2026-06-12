@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Builds
+.next/
+out/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Mobile (Expo)
+.expo/
+.expo-shared/
+*.orig.*
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+
+# Tooling / OS
+coverage/
+.vercel/
+*.log
+.DS_Store
+Thumbs.db

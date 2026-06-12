@@ -1,0 +1,13 @@
+{
+  "name": "@bordero/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Migrations Supabase et types PostgreSQL générés",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
