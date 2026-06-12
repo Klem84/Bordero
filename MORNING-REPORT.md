@@ -21,9 +21,15 @@ Session autonome démarrée le 2026-06-12 au soir. Objectif : Sprint 1 (socle do
 - **Migration 0002 — Tables métier** appliquée sur staging : `clients`, `sites` (PostGIS `geom`), `ouvrages`, `camions`, `exutoires`, `agrements` (+ trigger d'audit) et `agrement_events`. Enums alignés sur packages/core. RLS multi-tenant sur toutes les tables (écriture admin/exploitation pour l'opérationnel, admin seul pour le paramétrage, conforme à la matrice des rôles §2.2). Tables et grants vérifiés via `information_schema`.
 - **Utilitaire SQL** `packages/db/scripts/sql.mjs` (client `pg`) pour exécuter du SQL sur staging et vérifier les migrations. Réutilisable pour le test d'isolation RLS.
 
+- **Hook d'auth ACTIVÉ** automatiquement via l'API de management Supabase (access token fourni) : `org_id` et le rôle sont injectés dans les JWT. La sécurité multi-tenant est active de bout en bout. (Tu n'as plus à le faire à la main.)
+- **Clés Stripe test + Supabase access token** reçues et câblées dans `.env.local`.
+- **Migration 0003 — Opérations** appliquée : `devis`, `devis_lignes`, `commandes`, `tournees`, `interventions`, `intervention_ouvrages`, `intervention_events`. Machine à états de l'intervention **en base** (trigger `check_intervention_transition`, identique à packages/core). RLS multi-tenant (le chauffeur exécute ses interventions, l'exploitation gère).
+- **Tests de sécurité DB** (`packages/db/scripts/test-rls.mjs`, lançable via `pnpm --filter @bordero/db test:rls`) : ✅ isolation multi-tenant RLS (org A ne voit pas org B) + ✅ machine à états (transition illégale rejetée). Tous passés.
+
 ## En cours
 
-- Sprint 1 — suite : interventions, tournées, commandes/devis, puis objets réglementaires (bordereaux, factures) avec immuabilité, numérotation et machine à états en base.
+- Sprint 1 — dernier bloc : objets réglementaires (bordereaux + signatures + plages_numeros, factures + lignes + paiements + avoirs) avec immuabilité (append-only) et numérotation continue (RG-8.3).
+- Ensuite : Sprint 2 (M1, back-office Next.js) et début du cœur réglementaire M4.
 
 ## Notes techniques
 
@@ -31,8 +37,9 @@ Session autonome démarrée le 2026-06-12 au soir. Objectif : Sprint 1 (socle do
 
 ## ⚠️ Actions qui requièrent TA main (rien d'irréversible n'a été fait)
 
-- **Activer le hook d'auth** dans Supabase si je n'ai pas pu l'automatiser : Dashboard → Authentication → Hooks → Customize Access Token → fonction `public.custom_access_token_hook`. (Indispensable pour que `org_id` et le rôle soient dans le JWT, donc pour que la sécurité multi-tenant fonctionne côté client.)
-- Comptes/clés non fournis cette nuit (voir Acces.txt) : tout ce qui manque est noté ici.
+- ~~Activer le hook d'auth~~ ✅ FAIT automatiquement (access token fourni).
+- Vérifier dans le dashboard Supabase (Authentication → Hooks) que « Customize Access Token » pointe bien sur `public.custom_access_token_hook` (par sécurité ; déjà activé par API).
+- Comptes/clés encore non fournis (optionnels) : Sentry (DSN) et PostHog (clé EU) si tu veux le monitoring. Tout le reste est branché.
 
 ## Décisions prises en autonomie (à valider)
 

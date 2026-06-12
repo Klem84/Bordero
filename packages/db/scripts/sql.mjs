@@ -33,6 +33,8 @@ if (!sql) {
   process.exit(1);
 }
 
+client.on('notice', (n) => console.log('NOTICE:', n.message));
+
 await client.connect();
 try {
   const res = await client.query(sql);

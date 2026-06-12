@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Migrations Supabase et types PostgreSQL générés",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:rls": "node scripts/test-rls.mjs"
   },
   "devDependencies": {
     "pg": "^8.21.0",
