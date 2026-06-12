@@ -201,6 +201,47 @@ try {
   await client.query('rollback');
 }
 
+// --- Test 6 : facturation (RPC) end-to-end ---
+await client.query('begin');
+try {
+  const o = await client.query(`insert into public.organisations(raison_sociale) values('FACT') returning id`);
+  const org = o.rows[0].id;
+  const c = await client.query(`insert into public.clients(organisation_id, nom) values($1,'C') returning id`, [org]);
+  const s = await client.query(
+    `insert into public.sites(organisation_id, client_id, adresse) values($1,$2,'A') returning id`,
+    [org, c.rows[0].id],
+  );
+  await client.query('set local role authenticated');
+  await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+    JSON.stringify({ org_id: org, app_role: 'admin', sub: '00000000-0000-4000-8000-00000000000f' }),
+  ]);
+  const cmd = await client.query(
+    `insert into public.commandes(organisation_id, client_id, site_id) values($1,$2,$3) returning id`,
+    [org, c.rows[0].id, s.rows[0].id],
+  );
+  await client.query(
+    `insert into public.commande_lignes(organisation_id, commande_id, designation, quantite, prix_ht_cents, tva_taux, ordre)
+     values ($1,$2,'Vidange',1,25000,20,0),($1,$2,'Curage',2,18000,20,1)`,
+    [org, cmd.rows[0].id],
+  );
+  const i = await client.query(
+    `insert into public.interventions(organisation_id, site_id, commande_id, status) values($1,$2,$3,'PLANIFIEE') returning id`,
+    [org, s.rows[0].id, cmd.rows[0].id],
+  );
+  const r = await client.query(`select public.rpc_facturer_intervention($1) as res`, [i.rows[0].id]);
+  await client.query('reset role');
+  const res = r.rows[0].res;
+  if (res?.numero?.startsWith('F-') && Number(res.ttc_cents) === 73200) {
+    ok(`facturation RPC : ${res.numero} TTC ${(Number(res.ttc_cents) / 100).toFixed(2)} €`);
+  } else {
+    ko('facturation RPC', JSON.stringify(res));
+  }
+} catch (e) {
+  ko('facturation RPC (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
 await client.end();
 
 if (failures.length) {

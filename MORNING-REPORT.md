@@ -62,7 +62,19 @@ Reste sur M1 : CRUD sites/ouvrages depuis la fiche, SIRET pro à la création.
 - **Registre** (`/app/conformite/registre`) : tableau filtrable (statut, période), **export CSV** (route handler).
 - Bucket Storage `documents` privé créé via la clé secrète (qui marche pour Storage et l'API admin auth, pas pour PostgREST).
 
-Reste sur M4 : écran Conformité (coffre-fort agréments, jauge de quota), URL signée de téléchargement du PDF depuis le registre, bilan annuel (A3).
+- **Téléchargement PDF** des bordereaux depuis le registre (URL signée à durée limitée).
+
+## Sprint M5 (facturation) — fait (base)
+
+- **RPC `rpc_facturer_intervention`** : crée la facture depuis la commande (brouillon → lignes → totaux → émission, respecte l'immuabilité RG-9.1). **Testée end-to-end** (test-rls 9/9 : F-2026-00001, 732 € TTC).
+- **Server Action de facturation** : RPC + génération PDF facture + SHA-256 + archivage Storage.
+- **Écran Facturation** (`/app/facturation`) : liste des factures, total émis/encaissé, téléchargement PDF. Bouton « Générer la facture » sur l'intervention terminée.
+
+## État des tests
+- DB (`pnpm --filter @bordero/db test:rls`) : **9/9 verts** (isolation RLS, machine à états, numérotation, immuabilité bordereau, clôture, facturation).
+- Unitaires (`pnpm -r test`) : core 22, pdf 2.
+
+Reste : écran Conformité (coffre-fort agréments, jauge de quota), bilan annuel (A3), dashboard avec vraies données, app mobile Expo, encaissement Stripe.
 
 ## Notes techniques
 

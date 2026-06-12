@@ -15,6 +15,7 @@ interface BordereauRow {
   statut: string;
   created_at: string;
   quantite_pompee_m3: number | null;
+  pdf_url: string | null;
 }
 
 export default async function RegistrePage({
@@ -27,7 +28,7 @@ export default async function RegistrePage({
 
   let query = supabase
     .from('bordereaux')
-    .select('id, numero, type, statut, created_at, quantite_pompee_m3')
+    .select('id, numero, type, statut, created_at, quantite_pompee_m3, pdf_url')
     .order('created_at', { ascending: false })
     .limit(500);
   if (statut) query = query.eq('statut', statut);
@@ -94,6 +95,7 @@ export default async function RegistrePage({
               <th className="px-4 py-3 font-medium">Date</th>
               <th className="px-4 py-3 font-medium">Volume (m³)</th>
               <th className="px-4 py-3 font-medium">Statut</th>
+              <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -107,11 +109,20 @@ export default async function RegistrePage({
                   </td>
                   <td className="px-4 py-3 text-slate-600">{b.quantite_pompee_m3 ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{STATUT_LABEL[b.statut] ?? b.statut}</td>
+                  <td className="px-4 py-3 text-right">
+                    {b.pdf_url ? (
+                      <a href={`/app/conformite/registre/${b.id}/pdf`} className="text-bordero hover:underline">
+                        PDF
+                      </a>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
                   Aucun bordereau sur cette période.
                 </td>
               </tr>

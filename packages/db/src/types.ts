@@ -2212,6 +2212,10 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_facturer_intervention: {
+        Args: { p_intervention_id: string }
+        Returns: Json
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown

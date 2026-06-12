@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ClotureForm } from '@/components/cloture-form';
+import { FactureButton } from '@/components/facture-button';
 
 const STATUT_LABEL: Record<string, string> = {
   BROUILLON: 'Brouillon',
@@ -79,6 +80,11 @@ export default async function InterventionDetailPage({ params }: { params: Promi
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Clôture</h2>
           <ClotureForm interventionId={inter.id} />
+        </section>
+      ) : bordereaux.length > 0 ? (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Facturation</h2>
+          <FactureButton interventionId={inter.id} />
         </section>
       ) : null}
     </div>
