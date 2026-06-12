@@ -1,7 +1,9 @@
 'use client';
 
 import { useActionState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { facturerIntervention, type FactureState } from '@/app/app/facturation/actions';
+import { Button } from '@/components/ui/button';
 
 const initial: FactureState = { error: null };
 
@@ -10,8 +12,9 @@ export function FactureButton({ interventionId }: { interventionId: string }) {
 
   if (state?.ok) {
     return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-        Facture <span className="font-semibold">{state.ok.numero}</span> émise et archivée (PDF). ✓
+      <div className="flex items-center gap-2 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">
+        <CheckCircle2 className="h-4 w-4" />
+        Facture <span className="font-mono font-semibold">{state.ok.numero}</span> émise et archivée (PDF).
       </div>
     );
   }
@@ -19,14 +22,10 @@ export function FactureButton({ interventionId }: { interventionId: string }) {
   return (
     <form action={action}>
       <input type="hidden" name="intervention_id" value={interventionId} />
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-lg border border-bordero px-4 py-2 text-sm font-medium text-bordero hover:bg-bordero-50 disabled:opacity-60"
-      >
+      <Button type="submit" variant="secondary" disabled={pending}>
         {pending ? 'Facturation…' : 'Générer la facture'}
-      </button>
-      {state?.error ? <p className="mt-2 text-sm text-red-600">{state.error}</p> : null}
+      </Button>
+      {state?.error ? <p className="mt-2 text-sm text-danger">{state.error}</p> : null}
     </form>
   );
 }

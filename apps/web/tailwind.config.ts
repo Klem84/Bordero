@@ -26,12 +26,6 @@ export default {
         warning: { DEFAULT: 'var(--warning)', subtle: 'var(--warning-subtle)' },
         danger: { DEFAULT: 'var(--danger)', subtle: 'var(--danger-subtle)' },
         info: { DEFAULT: 'var(--info)', subtle: 'var(--info-subtle)' },
-        // Alias transitoire le temps de migrer tous les écrans vers les tokens.
-        bordero: {
-          DEFAULT: 'var(--brand)',
-          50: 'var(--brand-subtle)',
-          500: 'var(--brand-hover)',
-        },
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],

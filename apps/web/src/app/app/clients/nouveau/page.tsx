@@ -2,7 +2,10 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { ArrowLeft, Check } from 'lucide-react';
 import { creerClientSite, type ClientFormState } from '../actions';
+import { Button } from '@/components/ui/button';
+import { Field, Input, Label } from '@/components/ui/input';
 
 interface AdresseFeature {
   label: string;
@@ -33,11 +36,13 @@ export default function NouveauClientPage() {
         );
         const json = await res.json();
         setSuggestions(
-          (json.features ?? []).map((f: { properties: { label: string }; geometry: { coordinates: [number, number] } }) => ({
-            label: f.properties.label,
-            lng: f.geometry.coordinates[0],
-            lat: f.geometry.coordinates[1],
-          })),
+          (json.features ?? []).map(
+            (f: { properties: { label: string }; geometry: { coordinates: [number, number] } }) => ({
+              label: f.properties.label,
+              lng: f.geometry.coordinates[0],
+              lat: f.geometry.coordinates[1],
+            }),
+          ),
         );
       } catch {
         setSuggestions([]);
@@ -47,39 +52,44 @@ export default function NouveauClientPage() {
 
   return (
     <div className="max-w-2xl">
-      <Link href="/app/clients" className="text-sm text-slate-500 hover:underline">
-        ← Retour aux clients
+      <Link href="/app/clients" className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
+        <ArrowLeft className="h-4 w-4" /> Clients
       </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-bold text-slate-900">Nouveau client</h1>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-ink">Nouveau client</h1>
 
-      <form action={action} className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <form action={action} className="space-y-5 rounded-xl border border-border bg-surface p-6 shadow-card">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Type</label>
-          <div className="flex gap-3">
+          <Label>Type</Label>
+          <div className="flex flex-wrap gap-4">
             {[
               { v: 'particulier', l: 'Particulier' },
               { v: 'professionnel', l: 'Professionnel' },
               { v: 'collectivite', l: 'Collectivité' },
               { v: 'syndic', l: 'Syndic' },
             ].map((opt, i) => (
-              <label key={opt.v} className="flex items-center gap-2 text-sm">
-                <input type="radio" name="type" value={opt.v} defaultChecked={i === 0} /> {opt.l}
+              <label key={opt.v} className="flex items-center gap-2 text-sm text-ink">
+                <input type="radio" name="type" value={opt.v} defaultChecked={i === 0} className="accent-brand" />
+                {opt.l}
               </label>
             ))}
           </div>
         </div>
 
-        <Field name="nom" label="Nom *" required />
+        <Field label="Nom" htmlFor="nom">
+          <Input id="nom" name="nom" required />
+        </Field>
         <div className="grid grid-cols-2 gap-4">
-          <Field name="telephone" label="Téléphone" type="tel" />
-          <Field name="email" label="Email" type="email" />
+          <Field label="Téléphone" htmlFor="telephone">
+            <Input id="telephone" name="telephone" type="tel" />
+          </Field>
+          <Field label="Email" htmlFor="email">
+            <Input id="email" name="email" type="email" />
+          </Field>
         </div>
 
         <div className="relative">
-          <label htmlFor="adresse" className="mb-1 block text-sm font-medium text-slate-700">
-            Adresse
-          </label>
-          <input
+          <Label htmlFor="adresse">Adresse</Label>
+          <Input
             id="adresse"
             name="adresse"
             autoComplete="off"
@@ -88,10 +98,9 @@ export default function NouveauClientPage() {
               setQuery(e.target.value);
               setSelected(null);
             }}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-bordero focus:ring-1 focus:ring-bordero"
           />
           {suggestions.length > 0 && !selected ? (
-            <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+            <ul className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-border bg-surface shadow-card-hover">
               {suggestions.map((s) => (
                 <li key={s.label}>
                   <button
@@ -101,7 +110,7 @@ export default function NouveauClientPage() {
                       setQuery(s.label);
                       setSuggestions([]);
                     }}
-                    className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50"
+                    className="block w-full px-3 py-2 text-left text-sm text-ink hover:bg-surface-2"
                   >
                     {s.label}
                   </button>
@@ -112,55 +121,25 @@ export default function NouveauClientPage() {
           <input type="hidden" name="lng" value={selected?.lng ?? ''} />
           <input type="hidden" name="lat" value={selected?.lat ?? ''} />
           {selected ? (
-            <p className="mt-1 text-xs text-green-600">Adresse géolocalisée ✓</p>
+            <p className="mt-1 flex items-center gap-1 text-xs text-success">
+              <Check className="h-3.5 w-3.5" /> Adresse géolocalisée
+            </p>
           ) : null}
         </div>
 
-        {state?.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
+        {state?.error ? (
+          <p className="rounded-lg bg-danger-subtle px-3 py-2 text-sm text-danger">{state.error}</p>
+        ) : null}
 
         <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-lg bg-bordero px-4 py-2 text-sm font-medium text-white hover:bg-bordero-500 disabled:opacity-60"
-          >
+          <Button type="submit" disabled={pending}>
             {pending ? 'Création…' : 'Créer le client'}
-          </button>
-          <Link
-            href="/app/clients"
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
+          </Button>
+          <Link href="/app/clients" className="inline-flex items-center rounded-lg border border-border px-4 text-sm font-medium text-ink-muted hover:bg-surface-2">
             Annuler
           </Link>
         </div>
       </form>
-    </div>
-  );
-}
-
-function Field({
-  name,
-  label,
-  type = 'text',
-  required = false,
-}: {
-  name: string;
-  label: string;
-  type?: string;
-  required?: boolean;
-}) {
-  return (
-    <div>
-      <label htmlFor={name} className="mb-1 block text-sm font-medium text-slate-700">
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        required={required}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-bordero focus:ring-1 focus:ring-bordero"
-      />
     </div>
   );
 }

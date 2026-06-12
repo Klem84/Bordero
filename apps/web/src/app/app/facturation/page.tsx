@@ -1,14 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
-
-const STATUT_LABEL: Record<string, string> = {
-  brouillon: 'Brouillon',
-  emise: 'Émise',
-  envoyee: 'Envoyée',
-  payee: 'Payée',
-  partiellement_payee: 'Part. payée',
-  en_retard: 'En retard',
-  irrecouvrable: 'Irrécouvrable',
-};
+import { PageHeader } from '@/components/ui/page-header';
+import { Card } from '@/components/ui/card';
+import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { FACTURE_STATUT } from '@/lib/statuts';
 
 interface FactureRow {
   id: string;
@@ -39,62 +34,58 @@ export default async function FacturationPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-bold text-slate-900">Facturation</h1>
-      <p className="mb-6 text-sm text-slate-500">Factures émises et leur statut.</p>
+      <PageHeader title="Facturation" subtitle="Factures émises et leur statut." />
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:max-w-md">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-xs uppercase text-slate-400">Total émis</p>
-          <p className="text-lg font-semibold text-slate-800">{euros(totalEmis)}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-xs uppercase text-slate-400">Encaissé</p>
-          <p className="text-lg font-semibold text-green-700">{euros(totalEncaisse)}</p>
-        </div>
+        <Card className="p-4">
+          <p className="text-xs font-medium text-ink-muted">Total émis</p>
+          <p className="mt-1 text-xl font-semibold tabular text-ink">{euros(totalEmis)}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs font-medium text-ink-muted">Encaissé</p>
+          <p className="mt-1 text-xl font-semibold tabular text-success">{euros(totalEncaisse)}</p>
+        </Card>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-3 font-medium">Numéro</th>
-              <th className="px-4 py-3 font-medium">Date</th>
-              <th className="px-4 py-3 font-medium">Montant TTC</th>
-              <th className="px-4 py-3 font-medium">Statut</th>
-              <th className="px-4 py-3 font-medium"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {factures.length > 0 ? (
-              factures.map((f) => (
-                <tr key={f.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-800">{f.numero ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">
+      <Table>
+        <Thead>
+          <Th>Numéro</Th>
+          <Th>Date</Th>
+          <Th className="text-right">Montant TTC</Th>
+          <Th>Statut</Th>
+          <Th className="text-right" />
+        </Thead>
+        <Tbody>
+          {factures.length > 0 ? (
+            factures.map((f) => {
+              const s = FACTURE_STATUT[f.statut] ?? { label: f.statut, tone: 'neutral' as const };
+              return (
+                <Tr key={f.id}>
+                  <Td className="font-mono text-xs font-medium">{f.numero ?? '—'}</Td>
+                  <Td className="tabular text-ink-muted">
                     {f.emise_le ? new Date(f.emise_le).toLocaleDateString('fr-FR') : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{euros(Number(f.total_ttc_cents))}</td>
-                  <td className="px-4 py-3 text-slate-600">{STATUT_LABEL[f.statut] ?? f.statut}</td>
-                  <td className="px-4 py-3 text-right">
+                  </Td>
+                  <Td className="text-right tabular font-medium">{euros(Number(f.total_ttc_cents))}</Td>
+                  <Td>
+                    <Badge tone={s.tone}>{s.label}</Badge>
+                  </Td>
+                  <Td className="text-right">
                     {f.pdf_url ? (
-                      <a href={`/app/facturation/${f.id}/pdf`} className="text-bordero hover:underline">
+                      <a href={`/app/facturation/${f.id}/pdf`} className="font-medium text-brand hover:underline">
                         PDF
                       </a>
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <span className="text-ink-muted/50">—</span>
                     )}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-slate-500">
-                  Aucune facture. Facturez une intervention terminée.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </Td>
+                </Tr>
+              );
+            })
+          ) : (
+            <EmptyRow colSpan={5}>Aucune facture. Facturez une intervention terminée.</EmptyRow>
+          )}
+        </Tbody>
+      </Table>
     </div>
   );
 }

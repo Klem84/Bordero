@@ -1,19 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { PageHeader } from '@/components/ui/page-header';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { ClotureForm } from '@/components/cloture-form';
 import { FactureButton } from '@/components/facture-button';
-
-const STATUT_LABEL: Record<string, string> = {
-  BROUILLON: 'Brouillon',
-  PLANIFIEE: 'Planifiée',
-  EN_ROUTE: 'En route',
-  SUR_SITE: 'Sur site',
-  TERMINEE: 'Terminée',
-  IMPOSSIBLE: 'Impossible',
-  CLOTUREE: 'Clôturée',
-  ANNULEE: 'Annulée',
-};
+import { INTERVENTION_STATUT, BORDEREAU_STATUT } from '@/lib/statuts';
 
 interface InterventionDetail {
   id: string;
@@ -50,40 +44,42 @@ export default async function InterventionDetailPage({ params }: { params: Promi
     .select('id, numero, type, statut')
     .eq('intervention_id', id);
   const bordereaux = (bordData ?? []) as BordereauLite[];
+  const s = INTERVENTION_STATUT[inter.status] ?? { label: inter.status, tone: 'neutral' as const };
 
   return (
     <div className="max-w-3xl">
-      <Link href="/app/interventions" className="text-sm text-slate-500 hover:underline">
-        ← Interventions
+      <Link href="/app/interventions" className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
+        <ArrowLeft className="h-4 w-4" /> Interventions
       </Link>
-      <h1 className="mb-1 mt-2 text-2xl font-bold text-slate-900">Intervention</h1>
-      <p className="mb-6 text-sm text-slate-500">
-        {site?.adresse ?? '—'} · statut : {STATUT_LABEL[inter.status] ?? inter.status}
-      </p>
+      <PageHeader title="Intervention" subtitle={site?.adresse ?? '—'} actions={<Badge tone={s.tone}>{s.label}</Badge>} />
 
-      <section className="mb-6">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Bordereaux</h2>
-        {bordereaux.length === 0 ? (
-          <p className="text-sm text-slate-500">Aucun bordereau émis.</p>
-        ) : (
-          <ul className="space-y-2">
-            {bordereaux.map((b) => (
-              <li key={b.id} className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
-                <span className="font-medium">{b.numero}</span> — {b.type} ({b.statut})
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <h2 className="mb-3 text-sm font-semibold text-ink">Bordereaux</h2>
+      {bordereaux.length === 0 ? (
+        <p className="mb-6 text-sm text-ink-muted">Aucun bordereau émis.</p>
+      ) : (
+        <ul className="mb-6 space-y-2">
+          {bordereaux.map((b) => {
+            const bs = BORDEREAU_STATUT[b.statut] ?? { label: b.statut, tone: 'neutral' as const };
+            return (
+              <Card key={b.id} className="flex items-center justify-between p-3 text-sm">
+                <span className="font-mono font-medium">{b.numero}</span>
+                <span className="flex items-center gap-2 text-ink-muted">
+                  {b.type} <Badge tone={bs.tone}>{bs.label}</Badge>
+                </span>
+              </Card>
+            );
+          })}
+        </ul>
+      )}
 
       {CLOTURABLE.includes(inter.status) ? (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Clôture</h2>
+          <h2 className="mb-3 text-sm font-semibold text-ink">Clôture</h2>
           <ClotureForm interventionId={inter.id} />
         </section>
       ) : bordereaux.length > 0 ? (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Facturation</h2>
+          <h2 className="mb-3 text-sm font-semibold text-ink">Facturation</h2>
           <FactureButton interventionId={inter.id} />
         </section>
       ) : null}

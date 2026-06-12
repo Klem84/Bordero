@@ -1,25 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-
-const TYPE_LABEL: Record<string, string> = {
-  particulier: 'Particulier',
-  professionnel: 'Professionnel',
-  collectivite: 'Collectivité',
-  syndic: 'Syndic',
-};
-
-const OUVRAGE_LABEL: Record<string, string> = {
-  FOSSE_SEPTIQUE: 'Fosse septique',
-  FOSSE_TOUTES_EAUX: 'Fosse toutes eaux',
-  MICRO_STATION: 'Micro-station',
-  BAC_A_GRAISSE: 'Bac à graisse',
-  SEPARATEUR_HYDROCARBURES: 'Séparateur hydrocarbures',
-  POSTE_RELEVAGE: 'Poste de relevage',
-  CUVE_FIOUL: 'Cuve à fioul',
-  CANALISATION: 'Canalisation',
-  AUTRE: 'Autre',
-};
+import { PageHeader } from '@/components/ui/page-header';
+import { Card } from '@/components/ui/card';
+import { buttonClasses } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { CLIENT_TYPE, OUVRAGE_TYPE } from '@/lib/statuts';
 
 interface ClientDetail {
   id: string;
@@ -52,10 +39,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const client = clientData as ClientDetail | null;
   if (!client) notFound();
 
-  const { data: sitesData } = await supabase
-    .from('sites')
-    .select('id, adresse')
-    .eq('client_id', id);
+  const { data: sitesData } = await supabase.from('sites').select('id, adresse').eq('client_id', id);
   const sites = (sitesData ?? []) as SiteRow[];
 
   const siteIds = sites.map((s) => s.id);
@@ -69,70 +53,72 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   }
 
   return (
-    <div className="max-w-4xl">
-      <Link href="/app/clients" className="text-sm text-slate-500 hover:underline">
-        ← Clients
+    <div>
+      <Link href="/app/clients" className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
+        <ArrowLeft className="h-4 w-4" /> Clients
       </Link>
-      <div className="mb-6 mt-2 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{client.nom}</h1>
-          <p className="text-sm text-slate-500">{TYPE_LABEL[client.type] ?? client.type}</p>
-        </div>
-        <Link
-          href={`/app/commandes/nouvelle?client=${client.id}`}
-          className="rounded-lg bg-bordero px-4 py-2 text-sm font-medium text-white hover:bg-bordero-500"
-        >
-          + Nouvelle commande
-        </Link>
-      </div>
+      <PageHeader
+        title={client.nom}
+        subtitle={CLIENT_TYPE[client.type] ?? client.type}
+        actions={
+          <Link href={`/app/commandes/nouvelle?client=${client.id}`} className={buttonClasses('primary', 'md')}>
+            <Plus className="h-4 w-4" /> Nouvelle commande
+          </Link>
+        }
+      />
 
-      <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Info label="Téléphone" value={client.telephone} />
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Info label="Téléphone" value={client.telephone} mono />
         <Info label="Email" value={client.email} />
         <Info label="Sites" value={String(sites.length)} />
-      </section>
+      </div>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Sites et ouvrages
-        </h2>
-        <div className="space-y-4">
-          {sites.length === 0 ? (
-            <p className="text-sm text-slate-500">Aucun site enregistré.</p>
-          ) : (
-            sites.map((site) => (
-              <div key={site.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="font-medium text-slate-800">{site.adresse}</p>
-                <ul className="mt-2 space-y-1">
-                  {ouvrages
-                    .filter((o) => o.site_id === site.id)
-                    .map((o) => (
-                      <li key={o.id} className="text-sm text-slate-600">
-                        {OUVRAGE_LABEL[o.type] ?? o.type}
-                        {o.volume_nominal_litres ? ` — ${o.volume_nominal_litres} L` : ''}
-                        {o.date_prochaine_echeance
-                          ? ` — prochaine échéance ${new Date(o.date_prochaine_echeance).toLocaleDateString('fr-FR')}`
-                          : ''}
-                      </li>
-                    ))}
-                  {ouvrages.filter((o) => o.site_id === site.id).length === 0 ? (
-                    <li className="text-sm italic text-slate-400">Aucun ouvrage.</li>
-                  ) : null}
+      <h2 className="mb-3 text-sm font-semibold text-ink">Sites et ouvrages</h2>
+      <div className="space-y-4">
+        {sites.length === 0 ? (
+          <p className="text-sm text-ink-muted">Aucun site enregistré.</p>
+        ) : (
+          sites.map((site) => {
+            const liste = ouvrages.filter((o) => o.site_id === site.id);
+            return (
+              <Card key={site.id} className="p-4">
+                <p className="font-medium text-ink">{site.adresse}</p>
+                <ul className="mt-2 space-y-1.5">
+                  {liste.length > 0 ? (
+                    liste.map((o) => {
+                      const enRetard = o.date_prochaine_echeance
+                        ? new Date(o.date_prochaine_echeance) < new Date()
+                        : false;
+                      return (
+                        <li key={o.id} className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+                          <span className="font-medium text-ink">{OUVRAGE_TYPE[o.type] ?? o.type}</span>
+                          {o.volume_nominal_litres ? <span>· {o.volume_nominal_litres} L</span> : null}
+                          {o.date_prochaine_echeance ? (
+                            <Badge tone={enRetard ? 'warning' : 'neutral'}>
+                              Échéance {new Date(o.date_prochaine_echeance).toLocaleDateString('fr-FR')}
+                            </Badge>
+                          ) : null}
+                        </li>
+                      );
+                    })
+                  ) : (
+                    <li className="text-sm italic text-ink-muted">Aucun ouvrage.</li>
+                  )}
                 </ul>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
+              </Card>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
 
-function Info({ label, value }: { label: string; value: string | null }) {
+function Info({ label, value, mono }: { label: string; value: string | null; mono?: boolean }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-1 text-sm font-medium text-slate-800">{value ?? '—'}</p>
-    </div>
+    <Card className="p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
+      <p className={'mt-1 text-sm font-medium text-ink' + (mono ? ' font-mono' : '')}>{value ?? '—'}</p>
+    </Card>
   );
 }

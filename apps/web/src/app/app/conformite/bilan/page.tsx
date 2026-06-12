@@ -1,6 +1,11 @@
 import Link from 'next/link';
+import { ArrowLeft, FileDown } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth';
 import { assembleBilan } from '@/lib/bilan';
+import { PageHeader } from '@/components/ui/page-header';
+import { Card } from '@/components/ui/card';
+import { buttonClasses } from '@/components/ui/button';
+import { cn } from '@/lib/cn';
 
 export default async function BilanPage({ searchParams }: { searchParams: Promise<{ annee?: string }> }) {
   const { annee: anneeParam } = await searchParams;
@@ -12,85 +17,80 @@ export default async function BilanPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="max-w-3xl">
-      <Link href="/app/conformite" className="text-sm text-slate-500 hover:underline">
-        ← Conformité
+      <Link href="/app/conformite" className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
+        <ArrowLeft className="h-4 w-4" /> Conformité
       </Link>
-      <div className="mb-6 mt-2 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Bilan annuel {annee}</h1>
-          <p className="text-sm text-slate-500">
-            Agrément {agrement.numero ?? '—'} ({agrement.departement ?? '—'}). À transmettre au préfet avant le 1er avril.
-          </p>
-        </div>
-        <a
-          href={`/app/conformite/bilan/export?annee=${annee}`}
-          className="rounded-lg bg-bordero px-4 py-2 text-sm font-medium text-white hover:bg-bordero-500"
-        >
-          Générer le bilan (PDF)
-        </a>
-      </div>
+      <PageHeader
+        title={`Bilan annuel ${annee}`}
+        subtitle={`Agrément ${agrement.numero ?? '—'} (${agrement.departement ?? '—'}). À transmettre au préfet avant le 1er avril.`}
+        actions={
+          <a href={`/app/conformite/bilan/export?annee=${annee}`} className={buttonClasses('primary', 'md')}>
+            <FileDown className="h-4 w-4" /> Générer le bilan (PDF)
+          </a>
+        }
+      />
 
       <div
-        className={
-          'mb-6 rounded-xl border p-4 text-sm ' +
-          (a.controles.complet
-            ? 'border-green-200 bg-green-50 text-green-800'
-            : 'border-amber-200 bg-amber-50 text-amber-800')
-        }
+        className={cn(
+          'mb-6 rounded-xl border p-4 text-sm',
+          a.controles.complet
+            ? 'border-success/30 bg-success-subtle text-success'
+            : 'border-warning/30 bg-warning-subtle text-[oklch(0.5_0.13_70)]',
+        )}
       >
         {a.controles.complet ? (
-          <span>Bilan prêt : tous les bordereaux sont bouclés et cohérents. ✓</span>
+          'Bilan prêt : tous les bordereaux sont bouclés et cohérents.'
         ) : (
-          <span>
+          <>
             À régulariser avant transmission : {a.controles.bordereauxNonBoucles} bordereau(x) non bouclé(s), écart
             pompé/dépoté {a.controles.ecartPompeDepotePct} %
             {a.controles.depassementQuota ? ', dépassement de quota' : ''}.
-          </span>
+          </>
         )}
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Par commune</h2>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card className="p-5">
+          <h2 className="mb-3 text-sm font-semibold text-ink">Par commune</h2>
           {a.installationsParCommune.length === 0 ? (
-            <p className="text-sm text-slate-500">Aucune donnée.</p>
+            <p className="text-sm text-ink-muted">Aucune donnée.</p>
           ) : (
-            <ul className="space-y-1 text-sm">
+            <ul className="space-y-1.5 text-sm">
               {a.installationsParCommune.map((c) => (
                 <li key={c.commune} className="flex justify-between">
-                  <span>{c.commune}</span>
-                  <span className="text-slate-500">
+                  <span className="text-ink">{c.commune}</span>
+                  <span className="tabular text-ink-muted">
                     {c.nbInstallations} inst. · {c.volumeM3.toFixed(1)} m³
                   </span>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Card>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Par filière</h2>
+        <Card className="p-5">
+          <h2 className="mb-3 text-sm font-semibold text-ink">Par filière</h2>
           {a.volumesParFiliere.length === 0 ? (
-            <p className="text-sm text-slate-500">Aucune donnée.</p>
+            <p className="text-sm text-ink-muted">Aucune donnée.</p>
           ) : (
-            <ul className="space-y-1 text-sm">
+            <ul className="space-y-1.5 text-sm">
               {a.volumesParFiliere.map((f) => (
                 <li key={f.exutoire} className="flex justify-between">
-                  <span>{f.exutoire}</span>
-                  <span className="text-slate-500">{f.volumeM3.toFixed(1)} m³</span>
+                  <span className="text-ink">{f.exutoire}</span>
+                  <span className="tabular text-ink-muted">{f.volumeM3.toFixed(1)} m³</span>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Card>
       </div>
 
-      <div className="mt-6 flex gap-6 text-sm text-slate-600">
+      <div className="mt-6 flex gap-6 text-sm text-ink-muted">
         <span>
-          Total pompé : <strong>{a.totalPompeM3.toFixed(1)} m³</strong>
+          Total pompé : <strong className="tabular text-ink">{a.totalPompeM3.toFixed(1)} m³</strong>
         </span>
         <span>
-          Total dépoté : <strong>{a.totalDepoteM3.toFixed(1)} m³</strong>
+          Total dépoté : <strong className="tabular text-ink">{a.totalDepoteM3.toFixed(1)} m³</strong>
         </span>
       </div>
     </div>

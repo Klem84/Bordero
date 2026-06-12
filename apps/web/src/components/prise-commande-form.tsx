@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useState } from 'react';
 import { appliquerTVACents, calculerPrixLigneCents } from '@bordero/core';
 import { createClient } from '@/lib/supabase/client';
 import { creerCommande, type CommandeState } from '@/app/app/commandes/actions';
+import { Button } from '@/components/ui/button';
 
 export interface PrestationDTO {
   id: string;
@@ -106,12 +107,12 @@ export function PriseCommandeForm({
     : 0;
   const { tvaCents, ttcCents } = appliquerTVACents(prixHt, presta ? num(presta.tva_taux) : 20);
 
-  const label = 'mb-1 block text-sm font-medium text-slate-700';
+  const label = 'mb-1.5 block text-sm font-medium text-ink';
   const field =
-    'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-bordero focus:ring-1 focus:ring-bordero';
+    'w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none transition-shadow focus-visible:shadow-ring focus-visible:border-brand';
 
   return (
-    <form action={action} className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <form action={action} className="space-y-5 rounded-xl border border-border bg-surface p-6 shadow-card">
       <div>
         <label className={label}>Client</label>
         <select
@@ -211,30 +212,28 @@ export function PriseCommandeForm({
       </div>
 
       {/* Récapitulatif prix en direct */}
-      <div className="rounded-lg bg-bordero-50 p-4 text-sm">
-        <div className="flex justify-between">
-          <span className="text-slate-600">Total HT</span>
-          <span className="font-medium">{euros(prixHt)}</span>
+      <div className="rounded-lg bg-brand-subtle p-4 text-sm">
+        <div className="flex justify-between text-ink-muted">
+          <span>Total HT</span>
+          <span className="tabular font-medium text-ink">{euros(prixHt)}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-slate-600">TVA</span>
-          <span>{euros(tvaCents)}</span>
+        <div className="flex justify-between text-ink-muted">
+          <span>TVA</span>
+          <span className="tabular">{euros(tvaCents)}</span>
         </div>
-        <div className="mt-1 flex justify-between border-t border-bordero/20 pt-1 text-base font-semibold text-bordero">
+        <div className="mt-1.5 flex justify-between border-t border-brand/15 pt-1.5 text-base font-semibold text-brand-ink">
           <span>Total TTC</span>
-          <span>{euros(ttcCents)}</span>
+          <span className="tabular">{euros(ttcCents)}</span>
         </div>
       </div>
 
-      {state?.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
+      {state?.error ? (
+        <p className="rounded-lg bg-danger-subtle px-3 py-2 text-sm text-danger">{state.error}</p>
+      ) : null}
 
-      <button
-        type="submit"
-        disabled={pending || !clientId || !siteId}
-        className="rounded-lg bg-bordero px-4 py-2 text-sm font-medium text-white hover:bg-bordero-500 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={pending || !clientId || !siteId}>
         {pending ? 'Création…' : 'Valider la commande'}
-      </button>
+      </Button>
     </form>
   );
 }

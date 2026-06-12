@@ -1,12 +1,11 @@
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-
-const TYPE_LABEL: Record<string, string> = {
-  particulier: 'Particulier',
-  professionnel: 'Professionnel',
-  collectivite: 'Collectivité',
-  syndic: 'Syndic',
-};
+import { PageHeader } from '@/components/ui/page-header';
+import { buttonClasses } from '@/components/ui/button';
+import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { CLIENT_TYPE } from '@/lib/statuts';
 
 interface ClientRow {
   id: string;
@@ -27,53 +26,48 @@ export default async function ClientsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Clients</h1>
-          <p className="text-sm text-slate-500">Particuliers, professionnels, collectivités et syndics.</p>
-        </div>
-        <Link
-          href="/app/clients/nouveau"
-          className="rounded-lg bg-bordero px-4 py-2 text-sm font-medium text-white hover:bg-bordero-500"
-        >
-          + Nouveau client
-        </Link>
-      </div>
+      <PageHeader
+        title="Clients"
+        subtitle="Particuliers, professionnels, collectivités et syndics."
+        actions={
+          <Link href="/app/clients/nouveau" className={buttonClasses('primary', 'md')}>
+            <Plus className="h-4 w-4" /> Nouveau client
+          </Link>
+        }
+      />
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-3 font-medium">Nom</th>
-              <th className="px-4 py-3 font-medium">Type</th>
-              <th className="px-4 py-3 font-medium">Téléphone</th>
-              <th className="px-4 py-3 font-medium">Email</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {clients && clients.length > 0 ? (
-              clients.map((c) => (
-                <tr key={c.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-800">
-                    <Link href={`/app/clients/${c.id}`} className="hover:underline">
-                      {c.nom}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{TYPE_LABEL[c.type] ?? c.type}</td>
-                  <td className="px-4 py-3 text-slate-600">{c.telephone ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{c.email ?? '—'}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={4} className="px-4 py-10 text-center text-slate-500">
-                  Aucun client pour l'instant. Importez votre fichier ou créez le premier.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <Thead>
+          <Th>Nom</Th>
+          <Th>Type</Th>
+          <Th>Téléphone</Th>
+          <Th>Email</Th>
+        </Thead>
+        <Tbody>
+          {clients.length > 0 ? (
+            clients.map((c) => (
+              <Tr key={c.id}>
+                <Td className="font-medium">
+                  <Link href={`/app/clients/${c.id}`} className="hover:text-brand hover:underline">
+                    {c.nom}
+                  </Link>
+                </Td>
+                <Td>
+                  <Badge tone={c.type === 'particulier' ? 'neutral' : 'brand'}>
+                    {CLIENT_TYPE[c.type] ?? c.type}
+                  </Badge>
+                </Td>
+                <Td className="tabular text-ink-muted">{c.telephone ?? '—'}</Td>
+                <Td className="text-ink-muted">{c.email ?? '—'}</Td>
+              </Tr>
+            ))
+          ) : (
+            <EmptyRow colSpan={4}>
+              Aucun client pour l'instant. Importez votre fichier ou créez le premier.
+            </EmptyRow>
+          )}
+        </Tbody>
+      </Table>
     </div>
   );
 }

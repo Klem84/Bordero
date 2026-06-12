@@ -1,12 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
-
-const STATUT_LABEL: Record<string, string> = {
-  EMIS: 'Émis',
-  SIGNE_CLIENT: 'Signé client',
-  DEPOSE: 'Déposé',
-  BOUCLE: 'Bouclé',
-  ANNULE: 'Annulé',
-};
+import { PageHeader } from '@/components/ui/page-header';
+import { buttonClasses } from '@/components/ui/button';
+import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Select } from '@/components/ui/input';
+import { BORDEREAU_STATUT } from '@/lib/statuts';
 
 interface BordereauRow {
   id: string;
@@ -42,94 +40,89 @@ export default async function RegistrePage({
   if (statut) params.set('statut', statut);
   if (from) params.set('from', from);
   if (to) params.set('to', to);
-  const exportHref = `/app/conformite/registre/export?${params.toString()}`;
+
+  const inputCls =
+    'h-9 rounded-lg border border-border bg-surface px-2 text-sm text-ink outline-none focus-visible:shadow-ring';
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Registre des bordereaux</h1>
-          <p className="text-sm text-slate-500">
-            Classé par date, conservation 10 ans. À présenter en cas de contrôle.
-          </p>
-        </div>
-        <a
-          href={exportHref}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
-          Exporter (CSV)
-        </a>
-      </div>
+      <PageHeader
+        title="Registre des bordereaux"
+        subtitle="Classé par date, conservation 10 ans. À présenter en cas de contrôle."
+        actions={
+          <a
+            href={`/app/conformite/registre/export?${params.toString()}`}
+            className={buttonClasses('secondary', 'md')}
+          >
+            Exporter (CSV)
+          </a>
+        }
+      />
 
-      <form className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-slate-500">Statut</span>
-          <select name="statut" defaultValue={statut ?? ''} className="rounded-lg border border-slate-300 px-2 py-1">
+      <form className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-border bg-surface p-4">
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-xs text-ink-muted">Statut</span>
+          <Select name="statut" defaultValue={statut ?? ''} className="h-9 w-44">
             <option value="">Tous</option>
-            {Object.entries(STATUT_LABEL).map(([v, l]) => (
+            {Object.entries(BORDEREAU_STATUT).map(([v, s]) => (
               <option key={v} value={v}>
-                {l}
+                {s.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-slate-500">Du</span>
-          <input type="date" name="from" defaultValue={from ?? ''} className="rounded-lg border border-slate-300 px-2 py-1" />
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-xs text-ink-muted">Du</span>
+          <input type="date" name="from" defaultValue={from ?? ''} className={inputCls} />
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-slate-500">Au</span>
-          <input type="date" name="to" defaultValue={to ?? ''} className="rounded-lg border border-slate-300 px-2 py-1" />
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-xs text-ink-muted">Au</span>
+          <input type="date" name="to" defaultValue={to ?? ''} className={inputCls} />
         </label>
-        <button className="rounded-lg bg-bordero px-3 py-1.5 font-medium text-white hover:bg-bordero-500">
-          Filtrer
-        </button>
+        <button className={buttonClasses('primary', 'sm')}>Filtrer</button>
       </form>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-3 font-medium">Numéro</th>
-              <th className="px-4 py-3 font-medium">Type</th>
-              <th className="px-4 py-3 font-medium">Date</th>
-              <th className="px-4 py-3 font-medium">Volume (m³)</th>
-              <th className="px-4 py-3 font-medium">Statut</th>
-              <th className="px-4 py-3 font-medium"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {bordereaux.length > 0 ? (
-              bordereaux.map((b) => (
-                <tr key={b.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-800">{b.numero}</td>
-                  <td className="px-4 py-3 text-slate-600">{b.type}</td>
-                  <td className="px-4 py-3 text-slate-600">
+      <Table>
+        <Thead>
+          <Th>Numéro</Th>
+          <Th>Type</Th>
+          <Th>Date</Th>
+          <Th className="text-right">Volume (m³)</Th>
+          <Th>Statut</Th>
+          <Th className="text-right" />
+        </Thead>
+        <Tbody>
+          {bordereaux.length > 0 ? (
+            bordereaux.map((b) => {
+              const s = BORDEREAU_STATUT[b.statut] ?? { label: b.statut, tone: 'neutral' as const };
+              return (
+                <Tr key={b.id}>
+                  <Td className="font-mono text-xs font-medium">{b.numero}</Td>
+                  <Td className="text-ink-muted">{b.type}</Td>
+                  <Td className="tabular text-ink-muted">
                     {new Date(b.created_at).toLocaleDateString('fr-FR')}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{b.quantite_pompee_m3 ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{STATUT_LABEL[b.statut] ?? b.statut}</td>
-                  <td className="px-4 py-3 text-right">
+                  </Td>
+                  <Td className="text-right tabular">{b.quantite_pompee_m3 ?? '—'}</Td>
+                  <Td>
+                    <Badge tone={s.tone}>{s.label}</Badge>
+                  </Td>
+                  <Td className="text-right">
                     {b.pdf_url ? (
-                      <a href={`/app/conformite/registre/${b.id}/pdf`} className="text-bordero hover:underline">
+                      <a href={`/app/conformite/registre/${b.id}/pdf`} className="font-medium text-brand hover:underline">
                         PDF
                       </a>
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <span className="text-ink-muted/50">—</span>
                     )}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
-                  Aucun bordereau sur cette période.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </Td>
+                </Tr>
+              );
+            })
+          ) : (
+            <EmptyRow colSpan={6}>Aucun bordereau sur cette période.</EmptyRow>
+          )}
+        </Tbody>
+      </Table>
     </div>
   );
 }
