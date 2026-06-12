@@ -33,10 +33,22 @@ Session autonome démarrée le 2026-06-12 au soir. Objectif : Sprint 1 (socle do
 
 Schéma complet sur staging (4 migrations), multi-tenant RLS sur toutes les tables, immuabilité réglementaire, numérotation continue, machine à états en base, audit, hook d'auth actif. C'est le jalon le plus structurant : il est posé et testé.
 
-## En cours
+## Sprint 2 (M1) — en cours
 
-- Sprint 2 (M1) : back-office Next.js (apps/web) — clients, ouvrages, prise de commande.
-- Puis cœur réglementaire M4 (numérotation serveur, gabarits PDF BSMV/facture, registre).
+- **Back-office Next.js scaffolé et qui BUILD** (`apps/web`, Next 15 + React 19 + Tailwind) : routes `/login`, `/app`, `/app/clients`, middleware d'auth.
+- **Auth Supabase SSR** (@supabase/ssr) : clients browser/server, middleware de session, page de connexion (Server Action), protection des routes `/app`, lecture du rôle/org depuis le JWT.
+- **Layout back-office** : barre latérale (Tableau de bord, Clients, Planning, Conformité, Facturation), déconnexion, en français.
+- **Tableau de bord** (6 tuiles, données à venir S8) + **liste clients** (lecture Supabase, état vide soigné).
+- **Types DB générés** (`packages/db/src/types.ts`, 33 tables) via l'API hébergée (l'access token évite Docker), exposés par `@bordero/db`.
+- **Module tarification** dans `packages/core` (calcul prix + majorations + TVA, CDC §5.1) avec tests. Total tests core : 17 verts.
+
+Reste sur M1 : fiche client (onglets), formulaires CRUD clients/sites/ouvrages, écran « Prise de commande rapide » avec calcul en direct, autocomplétion adresse (API Adresse data.gouv) et SIRET.
+
+## Notes techniques
+
+- Inférence de type Supabase : `.from().select()` peut renvoyer `never` avec les types générés (quirk supabase-js connu) ; contourné par un type explicite sur la requête clients. À harmoniser (helper typé) plus tard.
+- `tsconfig.base.json` a `declaration: true` (bon pour les packages lib) ; l'app web le surcharge en `declaration: false` (sinon erreur de portabilité de types).
+- Variables d'env : l'app lit le `.env.local` de la racine via dotenv dans `next.config.mjs` (source unique, pas de duplication des secrets).
 
 ## Notes techniques
 
