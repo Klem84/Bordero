@@ -2,32 +2,46 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  Users,
+  Truck,
+  CalendarDays,
+  ShieldCheck,
+  Receipt,
+  type LucideIcon,
+} from 'lucide-react';
+import { cn } from '@/lib/cn';
 
-const NAV = [
-  { href: '/app', label: 'Tableau de bord' },
-  { href: '/app/clients', label: 'Clients' },
-  { href: '/app/interventions', label: 'Interventions' },
-  { href: '/app/planning', label: 'Planning' },
-  { href: '/app/conformite', label: 'Conformité' },
-  { href: '/app/facturation', label: 'Facturation' },
+const NAV: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: '/app', label: 'Tableau de bord', icon: LayoutDashboard },
+  { href: '/app/clients', label: 'Clients', icon: Users },
+  { href: '/app/interventions', label: 'Interventions', icon: Truck },
+  { href: '/app/planning', label: 'Planning', icon: CalendarDays },
+  { href: '/app/conformite', label: 'Conformité', icon: ShieldCheck },
+  { href: '/app/facturation', label: 'Facturation', icon: Receipt },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   return (
-    <nav className="flex flex-col gap-1 p-3">
-      {NAV.map((item) => {
-        const active = item.href === '/app' ? pathname === '/app' : pathname.startsWith(item.href);
+    <nav className="flex flex-col gap-0.5 px-3 py-2">
+      {NAV.map(({ href, label, icon: Icon }) => {
+        const active = href === '/app' ? pathname === '/app' : pathname.startsWith(href);
         return (
           <Link
-            key={item.href}
-            href={item.href}
-            className={
-              'rounded-lg px-3 py-2 text-sm font-medium transition ' +
-              (active ? 'bg-bordero text-white' : 'text-slate-600 hover:bg-slate-100')
-            }
+            key={href}
+            href={href}
+            aria-current={active ? 'page' : undefined}
+            className={cn(
+              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150',
+              active
+                ? 'bg-brand text-white'
+                : 'text-sidebar-muted hover:bg-sidebar-2 hover:text-sidebar-ink',
+            )}
           >
-            {item.label}
+            <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />
+            {label}
           </Link>
         );
       })}
