@@ -17,9 +17,17 @@ Session autonome démarrée le 2026-06-12 au soir. Objectif : Sprint 1 (socle do
   - hook `custom_access_token_hook` (injecte org_id + rôle dans le JWT).
   - RLS activée sur les 3 tables. Vérifié : `organisations` renvoie 200 + `[]` pour un appel anonyme (la RLS filtre bien).
 
+- **Clés câblées** : Brevo et Expo reçues et ajoutées à `.env.local` (+ Mapbox, Resend, Supabase déjà présentes). `.env.example` complété pour tous les services.
+- **Migration 0002 — Tables métier** appliquée sur staging : `clients`, `sites` (PostGIS `geom`), `ouvrages`, `camions`, `exutoires`, `agrements` (+ trigger d'audit) et `agrement_events`. Enums alignés sur packages/core. RLS multi-tenant sur toutes les tables (écriture admin/exploitation pour l'opérationnel, admin seul pour le paramétrage, conforme à la matrice des rôles §2.2). Tables et grants vérifiés via `information_schema`.
+- **Utilitaire SQL** `packages/db/scripts/sql.mjs` (client `pg`) pour exécuter du SQL sur staging et vérifier les migrations. Réutilisable pour le test d'isolation RLS.
+
 ## En cours
 
-- Sprint 1 — suite : tables métier (clients, sites, ouvrages, camions, agréments, exutoires), puis interventions et objets réglementaires.
+- Sprint 1 — suite : interventions, tournées, commandes/devis, puis objets réglementaires (bordereaux, factures) avec immuabilité, numérotation et machine à états en base.
+
+## Notes techniques
+
+- Exposition REST PostgREST des nouvelles tables : peut accuser quelques minutes de retard après une migration en connexion directe (cache de schéma). Les tables existent et sont correctes ; sans impact code. Au besoin, toggle dans le dashboard (Settings → API) force le reload.
 
 ## ⚠️ Actions qui requièrent TA main (rien d'irréversible n'a été fait)
 
