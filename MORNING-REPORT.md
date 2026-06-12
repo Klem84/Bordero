@@ -16,7 +16,8 @@ corepack pnpm@9 --filter web dev
 ```
 
 - **Connexion de démo : `admin@bordero-demo.fr` / `BorderoDemo2026!`**
-- Organisation de démo : « Vidanges Démo Aveyron » (agrément actif, 4 clients géolocalisés, 5 prestations, 3 bordereaux bouclés).
+- Organisation de démo : « Vidanges Démo Aveyron » (agrément actif, 4 clients géolocalisés, 5 prestations, 3 bordereaux bouclés, 3 camions, 1 exutoire, 7 interventions dont 3 en file d'attente et 4 planifiées).
+- Le seed est désormais ré-exécutable à volonté (`node packages/db/scripts/seed.mjs`) même après création de bordereaux : il désactive temporairement les triggers d'immuabilité le temps du reset (connexion postgres superuser).
 - Vérifier les tests : `corepack pnpm@9 -r test` (core 36, pdf 2) et `corepack pnpm@9 --filter @bordero/db test:rls` (9/9).
 - Build de prod : `corepack pnpm@9 --filter web build`.
 
@@ -40,6 +41,13 @@ corepack pnpm@9 --filter web dev
 **M5 — Facturation**
 - Génération de facture depuis la commande (immuabilité RG-9.1), PDF, liste avec totaux, téléchargement.
 
+**M2 — Planning / dispatch (nuit 3)**
+- Écran `/app/planning` : file d'attente des interventions à planifier (urgences en tête) et tableau par camion du jour, avec navigation par date (jour précédent/suivant, sélecteur, retour à aujourd'hui).
+- Affectation jour × camion (création/réutilisation automatique de la tournée), réordonnancement de l'ordre de passage (monter/descendre), retrait vers la file. Tout passe par des RPC SECURITY DEFINER cloisonnées par organisation (`rpc_affecter`/`rpc_desaffecter`/`rpc_deplacer_intervention`).
+- Chaque colonne camion affiche une jauge de remplissage de citerne (volume estimé / capacité, seuils 85/100 %) et la durée totale de la tournée.
+- Vue de lecture `v_planning_interventions` (security_invoker, RLS respectée) qui agrège client, adresse, prestation, ouvrage, durée et volume estimé.
+- Vérifié : build OK, tests RPC fonctionnels (affectation BROUILLON→PLANIFIEE, réordonnancement, désaffectation, rejet inter-organisations), 9/9 RLS toujours verts.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
@@ -57,7 +65,7 @@ corepack pnpm@9 --filter web dev
 ## Ce qui reste (par ordre de valeur)
 
 - **App mobile chauffeur (M3)** : non démarrée. C'est le gros morceau restant (Expo, offline-first, tunnel d'intervention). Nécessite un vrai téléphone pour tester.
-- **Planning/dispatch (M2)** : non fait (glisser-déposer, carte). Les interventions existent mais pas l'écran d'affectation visuel.
+- **Planning/dispatch (M2)** : ✅ écran d'affectation jour × camion + file d'attente livré (voir nuit 3). Restent en option : glisser-déposer, carte/itinéraire, et CRUD du parc camions depuis l'UI (aujourd'hui via seed).
 - **Récurrence & relances (M6)** : moteur A4, écran CA dormant détaillé, portail client (lot 2).
 - **Encaissement Stripe** : clés test câblées, intégration paiement à faire.
 - **Trackdéchets (BSDD)** : lot 2.
