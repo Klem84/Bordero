@@ -60,6 +60,13 @@ corepack pnpm@9 --filter web dev
 - Entrée « Récurrence » dans la barre latérale ; la tuile CA dormant du tableau de bord pointe désormais vers cet écran. Seed calé pour illustrer les trois statuts d'échéance.
 - Vérifié : build OK, 9/9 RLS, 36 core, RPC testés (relance + tâche, traitement, statut invalide rejeté, cloisonnement inter-organisations).
 
+**Encaissement Stripe en mode TEST (nuit 3)**
+- Bouton « Encaisser » sur les factures dues (`/app/facturation`) : crée une session Stripe Checkout hébergée (mode test, locale fr, montant = solde restant dû), redirige vers la page de paiement Stripe.
+- Au retour, la route `/app/facturation/retour-stripe` vérifie l'état réel de la session côté Stripe (`payment_status === 'paid'`) puis enregistre le paiement via `rpc_enregistrer_paiement` (idempotent par PaymentIntent, index unique partiel) : la facture passe en « payée » ou « partiellement payée ». **Pas de webhook** (vérification au retour, suffisant en staging ; le webhook reste à câbler pour la prod).
+- Badge « Stripe mode test » et bannières de retour (payé / annulé / échec). Seed : facture émise de démo `F-2026-90001` (180 € TTC).
+- **Aucun paiement réel** : clés `sk_test_`/`pk_test_` uniquement. Carte de test Stripe pour la démo : `4242 4242 4242 4242`, date future, CVC quelconque.
+- Vérifié : build OK, 9/9 RLS, 36 core, RPC paiement testé (partiel, solde, idempotence, cloisonnement), création de session Checkout test validée contre l'API Stripe.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
@@ -79,7 +86,7 @@ corepack pnpm@9 --filter web dev
 - **App mobile chauffeur (M3)** : non démarrée. C'est le gros morceau restant (Expo, offline-first, tunnel d'intervention). Nécessite un vrai téléphone pour tester.
 - **Planning/dispatch (M2)** : ✅ écran d'affectation jour × camion + file d'attente livré (voir nuit 3). Restent en option : glisser-déposer, carte/itinéraire, et CRUD du parc camions depuis l'UI (aujourd'hui via seed).
 - **Récurrence & relances (M6)** : ✅ moteur A4 (trigger d'échéance), écran CA dormant détaillé et relances livrés (nuit 3). Restent : envoi réel des relances (email/SMS, hors garde-fou), séquence R1/R2/R3 automatisée via pg_cron, portail client (lot 2).
-- **Encaissement Stripe** : clés test câblées, intégration paiement à faire.
+- **Encaissement Stripe** : ✅ Stripe Checkout en mode test livré (nuit 3). Restent : webhook Stripe pour confirmation hors-redirect (prod), gestion des remboursements/avoirs, lien de paiement par SMS/email (hors garde-fou).
 - **Trackdéchets (BSDD)** : lot 2.
 - Détails : SIRET pro à la création, charte graphique, commune réelle dans le bilan (actuellement « Non précisé » faute de jointure intervention→site sur les bordereaux de démo). CRUD sites/ouvrages depuis la fiche : ✅ fait (nuit 3).
 
