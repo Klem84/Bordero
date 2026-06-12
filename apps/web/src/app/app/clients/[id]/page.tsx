@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card } from '@/components/ui/card';
 import { buttonClasses } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CLIENT_TYPE, OUVRAGE_TYPE } from '@/lib/statuts';
+import { CLIENT_TYPE } from '@/lib/statuts';
+import { SitesOuvrages, type SiteWithOuvrages } from './sites-ouvrages';
 
 interface ClientDetail {
   id: string;
@@ -18,13 +18,17 @@ interface ClientDetail {
 interface SiteRow {
   id: string;
   adresse: string;
+  instructions_acces: string | null;
 }
 interface OuvrageRow {
   id: string;
   site_id: string;
   type: string;
   volume_nominal_litres: number | null;
+  periodicite_mois: number | null;
+  date_derniere_intervention: string | null;
   date_prochaine_echeance: string | null;
+  localisation: string | null;
 }
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -39,7 +43,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const client = clientData as ClientDetail | null;
   if (!client) notFound();
 
-  const { data: sitesData } = await supabase.from('sites').select('id, adresse').eq('client_id', id);
+  const { data: sitesData } = await supabase
+    .from('sites')
+    .select('id, adresse, instructions_acces')
+    .eq('client_id', id)
+    .order('created_at');
   const sites = (sitesData ?? []) as SiteRow[];
 
   const siteIds = sites.map((s) => s.id);
@@ -47,10 +55,30 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   if (siteIds.length > 0) {
     const { data: ouvragesData } = await supabase
       .from('ouvrages')
-      .select('id, site_id, type, volume_nominal_litres, date_prochaine_echeance')
-      .in('site_id', siteIds);
+      .select(
+        'id, site_id, type, volume_nominal_litres, periodicite_mois, date_derniere_intervention, date_prochaine_echeance, localisation',
+      )
+      .in('site_id', siteIds)
+      .order('created_at');
     ouvrages = (ouvragesData ?? []) as OuvrageRow[];
   }
+
+  const sitesWithOuvrages: SiteWithOuvrages[] = sites.map((s) => ({
+    id: s.id,
+    adresse: s.adresse,
+    instructions_acces: s.instructions_acces,
+    ouvrages: ouvrages
+      .filter((o) => o.site_id === s.id)
+      .map((o) => ({
+        id: o.id,
+        type: o.type,
+        volume_nominal_litres: o.volume_nominal_litres,
+        periodicite_mois: o.periodicite_mois,
+        date_derniere_intervention: o.date_derniere_intervention,
+        localisation: o.localisation,
+        date_prochaine_echeance: o.date_prochaine_echeance,
+      })),
+  }));
 
   return (
     <div>
@@ -73,43 +101,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <Info label="Sites" value={String(sites.length)} />
       </div>
 
-      <h2 className="mb-3 text-sm font-semibold text-ink">Sites et ouvrages</h2>
-      <div className="space-y-4">
-        {sites.length === 0 ? (
-          <p className="text-sm text-ink-muted">Aucun site enregistré.</p>
-        ) : (
-          sites.map((site) => {
-            const liste = ouvrages.filter((o) => o.site_id === site.id);
-            return (
-              <Card key={site.id} className="p-4">
-                <p className="font-medium text-ink">{site.adresse}</p>
-                <ul className="mt-2 space-y-1.5">
-                  {liste.length > 0 ? (
-                    liste.map((o) => {
-                      const enRetard = o.date_prochaine_echeance
-                        ? new Date(o.date_prochaine_echeance) < new Date()
-                        : false;
-                      return (
-                        <li key={o.id} className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
-                          <span className="font-medium text-ink">{OUVRAGE_TYPE[o.type] ?? o.type}</span>
-                          {o.volume_nominal_litres ? <span>· {o.volume_nominal_litres} L</span> : null}
-                          {o.date_prochaine_echeance ? (
-                            <Badge tone={enRetard ? 'warning' : 'neutral'}>
-                              Échéance {new Date(o.date_prochaine_echeance).toLocaleDateString('fr-FR')}
-                            </Badge>
-                          ) : null}
-                        </li>
-                      );
-                    })
-                  ) : (
-                    <li className="text-sm italic text-ink-muted">Aucun ouvrage.</li>
-                  )}
-                </ul>
-              </Card>
-            );
-          })
-        )}
-      </div>
+      <SitesOuvrages clientId={client.id} sites={sitesWithOuvrages} />
     </div>
   );
 }

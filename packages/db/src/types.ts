@@ -2296,6 +2296,27 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_creer_ouvrage: {
+        Args: {
+          p_date_derniere?: string
+          p_localisation?: string
+          p_periodicite_mois?: number
+          p_site_id: string
+          p_type: Database["public"]["Enums"]["ouvrage_type"]
+          p_volume?: number
+        }
+        Returns: string
+      }
+      rpc_creer_site: {
+        Args: {
+          p_adresse: string
+          p_client_id: string
+          p_instructions_acces?: string
+          p_lat?: number
+          p_lng?: number
+        }
+        Returns: string
+      }
       rpc_deplacer_intervention: {
         Args: { p_intervention_id: string; p_sens: number }
         Returns: undefined
@@ -2308,6 +2329,32 @@ export type Database = {
         Args: { p_intervention_id: string }
         Returns: Json
       }
+      rpc_modifier_ouvrage: {
+        Args: {
+          p_date_derniere?: string
+          p_localisation?: string
+          p_ouvrage_id: string
+          p_periodicite_mois?: number
+          p_type: Database["public"]["Enums"]["ouvrage_type"]
+          p_volume?: number
+        }
+        Returns: undefined
+      }
+      rpc_modifier_site: {
+        Args: {
+          p_adresse: string
+          p_instructions_acces?: string
+          p_lat?: number
+          p_lng?: number
+          p_site_id: string
+        }
+        Returns: undefined
+      }
+      rpc_supprimer_ouvrage: {
+        Args: { p_ouvrage_id: string }
+        Returns: undefined
+      }
+      rpc_supprimer_site: { Args: { p_site_id: string }; Returns: undefined }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
