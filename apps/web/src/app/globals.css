@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+
+    /* Surfaces & texte (neutres froids, teintés vers le pétrole de marque) */
+    --bg: oklch(0.985 0.004 230);
+    --surface: oklch(1 0 0);
+    --surface-2: oklch(0.975 0.005 230);
+    --border: oklch(0.915 0.007 230);
+    --ink: oklch(0.27 0.022 235);
+    --ink-muted: oklch(0.48 0.02 235);
+
+    /* Marque (pétrole) */
+    --brand: oklch(0.47 0.086 218);
+    --brand-hover: oklch(0.41 0.09 218);
+    --brand-subtle: oklch(0.955 0.018 218);
+    --brand-ink: oklch(0.4 0.08 218);
+
+    /* App-shell : barre latérale pétrole profond */
+    --sidebar: oklch(0.255 0.03 228);
+    --sidebar-2: oklch(0.32 0.035 228);
+    --sidebar-ink: oklch(0.86 0.015 228);
+    --sidebar-muted: oklch(0.64 0.022 228);
+
+    /* Sémantique d'état */
+    --success: oklch(0.6 0.13 150);
+    --success-subtle: oklch(0.96 0.03 150);
+    --warning: oklch(0.74 0.15 75);
+    --warning-subtle: oklch(0.96 0.04 80);
+    --danger: oklch(0.58 0.2 25);
+    --danger-subtle: oklch(0.96 0.03 25);
+    --info: oklch(0.6 0.12 240);
+    --info-subtle: oklch(0.96 0.03 240);
+
+    --ring: oklch(0.47 0.086 218 / 0.35);
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-feature-settings: 'cv05', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--brand-subtle);
+    color: var(--brand-ink);
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

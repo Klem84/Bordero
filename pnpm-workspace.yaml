@@ -1,3 +1,8 @@
 packages:
   - "apps/*"
   - "packages/*"
+  # L'app mobile (Expo) utilise React 18.3 (RN 0.76), incompatible avec le
+  # React 19 du back-office. On la sort du workspace pour éviter que pnpm ne
+  # croise les versions de @types/react entre les deux apps. Elle s'installe
+  # indépendamment : `cd apps/mobile && corepack pnpm@9 install --ignore-workspace`.
+  - "!apps/mobile"

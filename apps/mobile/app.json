@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Bordero Chauffeur",
+    "slug": "bordero-chauffeur",
+    "scheme": "bordero",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "fr.bordero.chauffeur"
+    },
+    "android": {
+      "package": "fr.bordero.chauffeur"
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-sqlite"],
+    "extra": {
+      "router": {}
+    }
+  }
+}
