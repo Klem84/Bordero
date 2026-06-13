@@ -8,7 +8,13 @@ Le parcours métier complet de Bordero fonctionne **de bout en bout** et est dé
 
 ## État de vérification (dernière passe)
 
-Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 64 (core) + 5 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 16/16 (étendu avec le lot 2) ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk a été commité et poussé sur `auto/overnight-build` après build/tests verts.
+Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 64 (core) + 5 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 19/19 (étendu avec le lot 2 et l'audit de sécurité) ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk a été commité et poussé sur `auto/overnight-build` après build/tests verts.
+
+## Audit de sécurité (poursuite autonome)
+
+Deux revues de sécurité menées (dont une par agent indépendant) : **aucune faille cross-tenant** trouvée (l'isolation multi-tenant est solide sur toutes les RPC et toutes les surfaces anon du portail). Un correctif lot 2 (rpc_traiter_demande) et une classe de défaut intra-tenant ont été corrigés.
+
+**Durcissement appliqué** : 17 RPC `SECURITY DEFINER` « bureau » (clôture, facturation, avoir, sites/ouvrages, relances, planning, optimisation) vérifiaient l'organisation mais **pas le rôle**. Comme une RPC `SECURITY DEFINER` contourne la RLS, un chauffeur authentifié pouvait, via ces RPC, faire des écritures réservées au bureau (émettre un bordereau, supprimer un ouvrage, créer un avoir…). J'ai ajouté à chacune un garde-fou `admin/exploitation` (aligné sur les politiques d'écriture des tables), plus `search_path` explicite sur le trigger d'audit. L'app chauffeur n'appelle **aucune** de ces RPC (vérifié), donc rien n'est cassé côté terrain. Migration `20260613180000_rpc_roles_bureau.sql`. Suite de sécurité portée à **19 assertions** (refus chauffeur sur clôture, suppression d'ouvrage, traitement de demande).
 
 ## Lot 2 (démarré le 2026-06-13)
 
