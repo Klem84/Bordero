@@ -24,7 +24,7 @@ const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/app/facturation', label: 'Facturation', icon: Receipt },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
     <nav className="flex flex-col gap-0.5 px-3 py-2">
@@ -34,6 +34,7 @@ export function Sidebar() {
           <Link
             key={href}
             href={href}
+            onClick={onNavigate}
             aria-current={active ? 'page' : undefined}
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150',
