@@ -1,0 +1,12 @@
+# Expo
+.expo/
+dist/
+web-build/
+*.orig.*
+
+# Native
+ios/
+android/
+
+# Env
+.env*.local

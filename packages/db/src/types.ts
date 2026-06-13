@@ -2479,6 +2479,15 @@ export type Database = {
         Returns: undefined
       }
       rpc_supprimer_site: { Args: { p_site_id: string }; Returns: undefined }
+      rpc_sync_evenement: {
+        Args: {
+          p_client_event_uuid: string
+          p_intervention_id: string
+          p_payload?: Json
+          p_status_to: Database["public"]["Enums"]["intervention_status"]
+        }
+        Returns: Json
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
