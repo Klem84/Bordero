@@ -173,6 +173,25 @@ export async function enregistrerReleveLocal(params: {
   );
 }
 
+/** Empile la signature / preuve d'intervention (nom du signataire ou client absent). */
+export async function enregistrerSignatureLocal(params: {
+  interventionId: string;
+  signataireNom: string | null;
+  clientAbsent: boolean;
+}): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `insert into outbox (client_event_uuid, intervention_id, type, status_from, status_to, payload, created_at, synced)
+     values (?, ?, 'signature', null, null, ?, ?, 0)`,
+    [
+      uuidV4(),
+      params.interventionId,
+      JSON.stringify({ signataire_nom: params.signataireNom, client_absent: params.clientAbsent }),
+      new Date().toISOString(),
+    ],
+  );
+}
+
 export async function getEvenementsEnAttente(): Promise<OutboxEvent[]> {
   const db = await getDb();
   return db.getAllAsync<OutboxEvent>(

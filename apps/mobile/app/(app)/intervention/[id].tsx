@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import {
   INTERVENTION_TRANSITIONS,
   isFinalState,
@@ -12,6 +12,7 @@ import {
   getIntervention,
   appliquerStatutLocal,
   enregistrerReleveLocal,
+  enregistrerSignatureLocal,
   type LocalIntervention,
 } from '@/lib/db';
 import { synchroniser } from '@/lib/sync';
@@ -34,6 +35,9 @@ export default function InterventionDetail() {
   const [observations, setObservations] = useState('');
   const [prochaine, setProchaine] = useState('');
   const [releveMsg, setReleveMsg] = useState<string | null>(null);
+  const [signataire, setSignataire] = useState('');
+  const [clientAbsent, setClientAbsent] = useState(false);
+  const [signMsg, setSignMsg] = useState<string | null>(null);
 
   const charger = useCallback(async () => {
     if (!id) return;
@@ -74,6 +78,23 @@ export default function InterventionDetail() {
         prochaineDate: date,
       });
       setReleveMsg('Relevé enregistré (sera synchronisé).');
+      synchroniser(new Date().toISOString().slice(0, 10)).catch(() => undefined);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function enregistrerSignature() {
+    if (!item) return;
+    setBusy(true);
+    setSignMsg(null);
+    try {
+      await enregistrerSignatureLocal({
+        interventionId: item.id,
+        signataireNom: clientAbsent ? null : signataire.trim() || null,
+        clientAbsent,
+      });
+      setSignMsg(clientAbsent ? 'Client absent enregistré.' : 'Signature enregistrée.');
       synchroniser(new Date().toISOString().slice(0, 10)).catch(() => undefined);
     } finally {
       setBusy(false);
@@ -142,6 +163,43 @@ export default function InterventionDetail() {
         </View>
       ) : null}
 
+      {releveVisible ? (
+        <View style={styles.releve}>
+          <Text style={[text.label, { marginBottom: spacing.sm }]}>Signature client</Text>
+          <Pressable
+            onPress={() => setClientAbsent((v) => !v)}
+            style={styles.checkRow}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: clientAbsent }}
+          >
+            <View style={[styles.checkbox, clientAbsent && styles.checkboxOn]}>
+              {clientAbsent ? <Text style={styles.checkMark}>✓</Text> : null}
+            </View>
+            <Text style={styles.checkLabel}>Client absent</Text>
+          </Pressable>
+          {!clientAbsent ? (
+            <>
+              <Text style={styles.fieldLabel}>Nom du signataire</Text>
+              <TextInput
+                style={styles.input}
+                value={signataire}
+                onChangeText={setSignataire}
+                placeholder="Nom de la personne présente"
+                placeholderTextColor={colors.inkMuted}
+              />
+            </>
+          ) : null}
+          {signMsg ? <Text style={styles.releveMsg}>{signMsg}</Text> : null}
+          <View style={{ marginTop: spacing.md }}>
+            <BigButton
+              label={clientAbsent ? 'Valider (client absent)' : 'Valider la signature'}
+              onPress={enregistrerSignature}
+              disabled={busy || (!clientAbsent && signataire.trim().length === 0)}
+            />
+          </View>
+        </View>
+      ) : null}
+
       <Text style={[text.label, { marginTop: spacing.xl, marginBottom: spacing.sm }]}>
         {isFinalState(item.status) ? 'Intervention close' : 'Prochaine étape'}
       </Text>
@@ -206,4 +264,17 @@ const styles = StyleSheet.create({
   },
   multiline: { minHeight: 96, paddingTop: spacing.md, textAlignVertical: 'top' },
   releveMsg: { marginTop: spacing.sm, color: colors.success, fontSize: 14 },
+  checkRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: TOUCH },
+  checkbox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxOn: { backgroundColor: colors.brand, borderColor: colors.brand },
+  checkMark: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  checkLabel: { fontSize: 17, color: colors.ink },
 });

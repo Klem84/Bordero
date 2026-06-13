@@ -2506,6 +2506,15 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_sync_signature: {
+        Args: {
+          p_client_absent: boolean
+          p_client_event_uuid: string
+          p_intervention_id: string
+          p_signataire_nom: string
+        }
+        Returns: Json
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown

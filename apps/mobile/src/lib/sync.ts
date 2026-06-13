@@ -31,7 +31,18 @@ export async function pousserEnAttente(): Promise<{ envoyes: number; echecs: num
   let echecs = 0;
   for (const ev of pending) {
     let error: { message: string } | null = null;
-    if (ev.type === 'releve') {
+    if (ev.type === 'signature') {
+      const p = JSON.parse(ev.payload || '{}') as {
+        signataire_nom: string | null;
+        client_absent: boolean;
+      };
+      ({ error } = await supabase.rpc('rpc_sync_signature', {
+        p_intervention_id: ev.intervention_id,
+        p_signataire_nom: p.signataire_nom,
+        p_client_absent: p.client_absent,
+        p_client_event_uuid: ev.client_event_uuid,
+      } as never));
+    } else if (ev.type === 'releve') {
       const p = JSON.parse(ev.payload || '{}') as {
         ouvrage_id: string | null;
         volume_m3: number | null;
