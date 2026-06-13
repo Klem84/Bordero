@@ -125,7 +125,16 @@ export default async function RegistrePage({
                     ) : (
                       <form action={transmettreBsddAction} className="flex items-center gap-2">
                         <input type="hidden" name="bordereau_id" value={b.id} />
-                        <Badge tone="warning">Non transmis</Badge>
+                        {b.trackdechets_statut === 'A_COMPLETER' ? (
+                          <Badge
+                            tone="warning"
+                            title="Informations requises pour Trackdéchets : SIRET du client et de l'exutoire, quantité."
+                          >
+                            À compléter
+                          </Badge>
+                        ) : (
+                          <Badge tone="warning">Non transmis</Badge>
+                        )}
                         <button className="text-xs font-medium text-brand hover:underline">Transmettre</button>
                       </form>
                     )}

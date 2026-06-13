@@ -258,9 +258,12 @@ export async function transmettreBsdd(bordereauId: string): Promise<void> {
     },
   };
 
+  const { ok, manque } = bsddTransmissible(brut);
   let maj: Record<string, unknown>;
-  if (!bsddTransmissible(brut).ok) {
-    maj = { trackdechets_statut: 'NON_TRANSMIS' };
+  if (!ok) {
+    // Données réglementaires incomplètes : distinct du « non transmis » technique.
+    console.error('BSDD à compléter:', manque.join(', '));
+    maj = { trackdechets_statut: 'A_COMPLETER' };
   } else {
     const r = await creerBsddTrackdechets(construireBsddInput(brut));
     maj = r.transmis
