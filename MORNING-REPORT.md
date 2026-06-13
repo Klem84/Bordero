@@ -118,6 +118,9 @@ corepack pnpm@9 --filter web dev
 **App mobile — écran « À synchroniser » (nuit 3)**
 - Écran dédié listant les actions terrain en attente (changement d'état, relevé, signature) avec résumé lisible et horodatage, bouton « Synchroniser maintenant » (retour : envoyés / en attente), état vide rassurant. Le compteur de la tournée y renvoie d'un toucher. Donne au chauffeur la visibilité sur ce qui reste à remonter quand le réseau revient.
 
+**Polish design — titres de page (nuit 3)**
+- Template de titre racine « %s · Bordero » et `metadata.title` par écran (tableau de bord, clients, interventions, planning, récurrence, conformité + registre + bilan, facturation, paramètres, nouvelle commande, intervention). La fiche client affiche le nom du client dans l'onglet (generateMetadata). Onglets lisibles, repérage facilité, meilleur référencement/accessibilité.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
