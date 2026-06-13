@@ -2186,6 +2186,7 @@ export type Database = {
             }
             Returns: string
           }
+      bordero_delai_relance: { Args: { p_type: string }; Returns: number }
       current_app_role: { Args: never; Returns: string }
       current_org_id: { Args: never; Returns: string }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
@@ -2379,6 +2380,7 @@ export type Database = {
         Args: { p_camion_id: string; p_date: string; p_intervention_id: string }
         Returns: undefined
       }
+      rpc_avancer_relance: { Args: { p_relance_id: string }; Returns: Json }
       rpc_clore_intervention: {
         Args: {
           p_exutoire_id?: string
@@ -2449,6 +2451,7 @@ export type Database = {
         Args: { p_intervention_id: string }
         Returns: Json
       }
+      rpc_generer_relances_dues: { Args: never; Returns: number }
       rpc_marquer_relance: {
         Args: { p_relance_id: string; p_statut: string }
         Returns: undefined

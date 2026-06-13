@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { PiggyBank, AlarmClock, CalendarClock, Phone, Mail, MessageSquare, Check, X } from 'lucide-react';
+import { PiggyBank, AlarmClock, CalendarClock, Phone, Mail, MessageSquare, Check, X, ChevronsRight, RefreshCw } from 'lucide-react';
 import { statutEcheance, valoriserCaDormant, type StatutEcheance } from '@bordero/core';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
@@ -8,7 +8,17 @@ import { Badge, type Tone } from '@/components/ui/badge';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
 import { OUVRAGE_TYPE } from '@/lib/statuts';
-import { planifierRelance, marquerRelance } from './actions';
+import { planifierRelance, marquerRelance, avancerRelance, genererRelancesDues } from './actions';
+
+const ETAPE: Record<string, { label: string; tone: Tone }> = {
+  recurrence_R1: { label: 'R1', tone: 'info' },
+  recurrence_R2: { label: 'R2', tone: 'warning' },
+  recurrence_R3: { label: 'R3', tone: 'danger' },
+};
+const PROCHAINE_ETAPE: Record<string, string> = {
+  recurrence_R1: 'R2',
+  recurrence_R2: 'R3',
+};
 
 /** Tarif indicatif de valorisation du CA dormant (80 € HT / m³). */
 const TARIF_M3_CENTS = 8000;
@@ -117,6 +127,13 @@ export default async function RecurrencePage() {
       <PageHeader
         title="Récurrence"
         subtitle="Le chiffre d'affaires dormant et les relances d'entretien."
+        actions={
+          <form action={genererRelancesDues}>
+            <Button type="submit" variant="secondary" size="sm">
+              <RefreshCw className="h-4 w-4" /> Générer les relances dues
+            </Button>
+          </form>
+        }
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -223,13 +240,18 @@ export default async function RecurrencePage() {
                     <Icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-ink">
-                      {rel.client_id ? (clientNom.get(rel.client_id) ?? 'Client') : 'Client'}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-ink">
+                        {rel.client_id ? (clientNom.get(rel.client_id) ?? 'Client') : 'Client'}
+                      </p>
+                      <Badge tone={ETAPE[rel.type]?.tone ?? 'neutral'}>
+                        {ETAPE[rel.type]?.label ?? 'R?'}
+                      </Badge>
+                    </div>
                     <p className="text-xs text-ink-muted">
                       Relance d'entretien · {CANAL_LABEL[rel.canal ?? 'telephone'] ?? rel.canal}
                       {rel.planifie_le
-                        ? ` · planifiée le ${new Date(rel.planifie_le).toLocaleDateString('fr-FR')}`
+                        ? ` · à faire le ${new Date(rel.planifie_le).toLocaleDateString('fr-FR')}`
                         : ''}
                     </p>
                   </div>
@@ -238,9 +260,17 @@ export default async function RecurrencePage() {
                       <input type="hidden" name="relance_id" value={rel.id} />
                       <input type="hidden" name="statut" value="traitee" />
                       <Button type="submit" variant="secondary" size="sm">
-                        <Check className="h-4 w-4" /> Traitée
+                        <Check className="h-4 w-4" /> Aboutie
                       </Button>
                     </form>
+                    {PROCHAINE_ETAPE[rel.type] ? (
+                      <form action={avancerRelance}>
+                        <input type="hidden" name="relance_id" value={rel.id} />
+                        <Button type="submit" variant="secondary" size="sm">
+                          <ChevronsRight className="h-4 w-4" /> Sans réponse → {PROCHAINE_ETAPE[rel.type]}
+                        </Button>
+                      </form>
+                    ) : null}
                     <form action={marquerRelance}>
                       <input type="hidden" name="relance_id" value={rel.id} />
                       <input type="hidden" name="statut" value="annulee" />

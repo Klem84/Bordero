@@ -31,3 +31,21 @@ export async function marquerRelance(formData: FormData): Promise<void> {
   } as never);
   revalidatePath('/app/recurrence');
 }
+
+export async function avancerRelance(formData: FormData): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user?.orgId) return;
+  const relanceId = String(formData.get('relance_id') ?? '');
+  if (!relanceId) return;
+  const supabase = await createClient();
+  await supabase.rpc('rpc_avancer_relance', { p_relance_id: relanceId } as never);
+  revalidatePath('/app/recurrence');
+}
+
+export async function genererRelancesDues(): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user?.orgId) return;
+  const supabase = await createClient();
+  await supabase.rpc('rpc_generer_relances_dues', {} as never);
+  revalidatePath('/app/recurrence');
+}
