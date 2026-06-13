@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus, Users, Search } from 'lucide-react';
+import { Plus, Users, Search, FileDown } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { buttonClasses } from '@/components/ui/button';
@@ -45,9 +45,17 @@ export default async function ClientsPage({
         title="Clients"
         subtitle="Particuliers, professionnels, collectivités et syndics."
         actions={
-          <Link href="/app/clients/nouveau" className={buttonClasses('primary', 'md')}>
-            <Plus className="h-4 w-4" /> Nouveau client
-          </Link>
+          <div className="flex items-center gap-2">
+            <a
+              href={`/app/clients/export${recherche ? `?q=${encodeURIComponent(recherche)}` : ''}`}
+              className={buttonClasses('secondary', 'md')}
+            >
+              <FileDown className="h-4 w-4" /> Exporter CSV
+            </a>
+            <Link href="/app/clients/nouveau" className={buttonClasses('primary', 'md')}>
+              <Plus className="h-4 w-4" /> Nouveau client
+            </Link>
+          </div>
         }
       />
 
