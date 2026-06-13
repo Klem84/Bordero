@@ -147,6 +147,32 @@ export async function appliquerStatutLocal(params: {
   });
 }
 
+/** Empile un relevé terrain (volume pompé, observations, prochaine vidange). */
+export async function enregistrerReleveLocal(params: {
+  interventionId: string;
+  ouvrageId: string | null;
+  volumeM3: number | null;
+  observations: string | null;
+  prochaineDate: string | null;
+}): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `insert into outbox (client_event_uuid, intervention_id, type, status_from, status_to, payload, created_at, synced)
+     values (?, ?, 'releve', null, null, ?, ?, 0)`,
+    [
+      uuidV4(),
+      params.interventionId,
+      JSON.stringify({
+        ouvrage_id: params.ouvrageId,
+        volume_m3: params.volumeM3,
+        observations: params.observations,
+        prochaine_date: params.prochaineDate,
+      }),
+      new Date().toISOString(),
+    ],
+  );
+}
+
 export async function getEvenementsEnAttente(): Promise<OutboxEvent[]> {
   const db = await getDb();
   return db.getAllAsync<OutboxEvent>(

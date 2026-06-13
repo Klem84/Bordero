@@ -30,12 +30,30 @@ export async function pousserEnAttente(): Promise<{ envoyes: number; echecs: num
   const ok: string[] = [];
   let echecs = 0;
   for (const ev of pending) {
-    const { error } = await supabase.rpc('rpc_sync_evenement', {
-      p_intervention_id: ev.intervention_id,
-      p_client_event_uuid: ev.client_event_uuid,
-      p_status_to: ev.status_to,
-      p_payload: JSON.parse(ev.payload || '{}'),
-    } as never);
+    let error: { message: string } | null = null;
+    if (ev.type === 'releve') {
+      const p = JSON.parse(ev.payload || '{}') as {
+        ouvrage_id: string | null;
+        volume_m3: number | null;
+        observations: string | null;
+        prochaine_date: string | null;
+      };
+      ({ error } = await supabase.rpc('rpc_sync_releve', {
+        p_intervention_id: ev.intervention_id,
+        p_ouvrage_id: p.ouvrage_id,
+        p_volume_m3: p.volume_m3,
+        p_observations: p.observations,
+        p_prochaine_date: p.prochaine_date,
+        p_client_event_uuid: ev.client_event_uuid,
+      } as never));
+    } else {
+      ({ error } = await supabase.rpc('rpc_sync_evenement', {
+        p_intervention_id: ev.intervention_id,
+        p_client_event_uuid: ev.client_event_uuid,
+        p_status_to: ev.status_to,
+        p_payload: JSON.parse(ev.payload || '{}'),
+      } as never));
+    }
     if (error) {
       echecs += 1;
     } else {

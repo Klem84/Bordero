@@ -2495,6 +2495,17 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_sync_releve: {
+        Args: {
+          p_client_event_uuid: string
+          p_intervention_id: string
+          p_observations: string
+          p_ouvrage_id: string
+          p_prochaine_date: string
+          p_volume_m3: number
+        }
+        Returns: Json
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
