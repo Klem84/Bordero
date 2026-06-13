@@ -156,13 +156,21 @@ export function optimiserTournee(stops: PointTournee[], options: OptionsTournee 
   const seqB = deuxOpt(depot ? [{ id: '', ...depot }, ...nn] : nn, d);
 
   const meilleur = longueurChemin(seqA, d) <= longueurChemin(seqB, d) ? seqA : seqB;
-  const distanceM = longueurChemin(meilleur, d);
-  const ordreIds = meilleur.filter((p) => p.id !== '').map((p) => p.id);
+  const distanceMeilleur = longueurChemin(meilleur, d);
 
+  // Garantie « jamais pire que l'ordre initial » dans la métrique réelle. Le
+  // gain calculé pendant le 2-opt suppose une distance symétrique ; avec une
+  // matrice routière asymétrique (Mapbox), une inversion localement améliorante
+  // peut augmenter le coût réel. On retombe alors sur l'ordre fourni.
+  if (distanceInitialeM <= distanceMeilleur) {
+    return { ordreIds: stops.map((s) => s.id), distanceM: distanceInitialeM, distanceInitialeM, ameliorationPct: 0 };
+  }
+
+  const ordreIds = meilleur.filter((p) => p.id !== '').map((p) => p.id);
   return {
     ordreIds,
-    distanceM,
+    distanceM: distanceMeilleur,
     distanceInitialeM,
-    ameliorationPct: distanceInitialeM > 0 ? Math.max(0, (distanceInitialeM - distanceM) / distanceInitialeM) : 0,
+    ameliorationPct: distanceInitialeM > 0 ? (distanceInitialeM - distanceMeilleur) / distanceInitialeM : 0,
   };
 }

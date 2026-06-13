@@ -53,6 +53,24 @@ describe('optimiserTournee (2-opt)', () => {
     expect(second.ameliorationPct).toBe(0);
   });
 
+  it('ne dégrade jamais l’ordre avec une distance asymétrique (type matrice routière)', () => {
+    // Coût asymétrique arbitraire (A->B != B->A), comme une matrice Mapbox.
+    const cout: Record<string, number> = {
+      'A>B': 5, 'B>A': 9, 'A>C': 8, 'C>A': 2, 'A>D': 3, 'D>A': 7,
+      'B>C': 4, 'C>B': 6, 'B>D': 10, 'D>B': 1, 'C>D': 7, 'D>C': 3,
+    };
+    const dAsym = (x: { lat: number; lng: number }, y: { lat: number; lng: number }) => {
+      const px = x as PointTournee;
+      const py = y as PointTournee;
+      return cout[`${px.id}>${py.id}`] ?? 0;
+    };
+    const points = [A, B, C, D];
+    const r = optimiserTournee(points, { distance: dAsym });
+    expect(r.distanceM).toBeLessThanOrEqual(r.distanceInitialeM);
+    expect(r.ameliorationPct).toBeGreaterThanOrEqual(0);
+    expect([...r.ordreIds].sort()).toEqual(['A', 'B', 'C', 'D']);
+  });
+
   it('accepte une fonction de distance personnalisée', () => {
     const calls: string[] = [];
     const r = optimiserTournee([A, C, B], {

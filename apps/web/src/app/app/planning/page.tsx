@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Truck, MapPin, Clock, ArrowUp, ArrowDown, X, Printer, Waypoints } from 'lucide-react';
+import { Truck, MapPin, Clock, ArrowUp, ArrowDown, X, Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card } from '@/components/ui/card';
@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { OUVRAGE_TYPE } from '@/lib/statuts';
 import { DateNav } from './date-nav';
 import { AffecterForm } from './affecter-form';
-import { desaffecterIntervention, deplacerIntervention, optimiserTourneeAction } from './actions';
+import { OptimiserButton } from './optimiser-button';
+import { desaffecterIntervention, deplacerIntervention } from './actions';
 
 interface PlanningRow {
   id: string;
@@ -205,17 +206,7 @@ export default async function PlanningPage({
                       {items.length > 0 ? (
                         <div className="ml-auto flex items-center gap-1">
                           {items.length > 1 ? (
-                            <form action={optimiserTourneeAction}>
-                              <input type="hidden" name="tournee_id" value={items[0]?.tournee_id ?? ''} />
-                              <button
-                                type="submit"
-                                aria-label="Optimiser l'ordre de passage"
-                                title="Optimiser l'ordre (trajet le plus court)"
-                                className="rounded-md p-1 text-ink-muted transition-colors hover:bg-brand-subtle hover:text-brand"
-                              >
-                                <Waypoints className="h-4 w-4" />
-                              </button>
-                            </form>
+                            <OptimiserButton tourneeId={items[0]?.tournee_id ?? ''} />
                           ) : null}
                           <Link
                             href={`/app/planning/${selectedDate}/${cam.id}`}
