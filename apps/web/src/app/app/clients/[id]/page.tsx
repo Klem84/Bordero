@@ -3,10 +3,10 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
-import { Card } from '@/components/ui/card';
 import { buttonClasses } from '@/components/ui/button';
 import { CLIENT_TYPE } from '@/lib/statuts';
 import { SitesOuvrages, type SiteWithOuvrages } from './sites-ouvrages';
+import { ClientInfo } from './client-info';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -104,26 +104,19 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         }
       />
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Info label="Téléphone" value={client.telephone} mono />
-        <Info label="Email" value={client.email} />
-        {client.siret ? (
-          <Info label="SIRET" value={client.siret} mono />
-        ) : (
-          <Info label="Sites" value={String(sites.length)} />
-        )}
-      </div>
+      <ClientInfo
+        client={{
+          id: client.id,
+          type: client.type,
+          nom: client.nom,
+          telephone: client.telephone,
+          email: client.email,
+          siret: client.siret,
+        }}
+        nbSites={sites.length}
+      />
 
       <SitesOuvrages clientId={client.id} sites={sitesWithOuvrages} />
     </div>
-  );
-}
-
-function Info({ label, value, mono }: { label: string; value: string | null; mono?: boolean }) {
-  return (
-    <Card className="p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
-      <p className={'mt-1 text-sm font-medium text-ink' + (mono ? ' font-mono' : '')}>{value ?? '—'}</p>
-    </Card>
   );
 }

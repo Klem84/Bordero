@@ -64,6 +64,32 @@ export async function creerClientSite(
   redirect(`/app/clients/${clientId}`);
 }
 
+export async function modifierClient(_prev: CrudState | null, formData: FormData): Promise<CrudState> {
+  const user = await getCurrentUser();
+  if (!user?.orgId) return { error: 'Session invalide.' };
+  const id = String(formData.get('client_id') ?? '');
+  const type = String(formData.get('type') ?? 'particulier');
+  const nom = String(formData.get('nom') ?? '').trim();
+  if (!id) return { error: 'Client manquant.' };
+  if (!nom) return { error: 'Le nom du client est obligatoire.' };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('clients')
+    .update({
+      type,
+      nom,
+      telephone: strOrNull(formData.get('telephone')),
+      email: strOrNull(formData.get('email')),
+      siret: strOrNull(formData.get('siret')),
+    } as never)
+    .eq('id', id);
+  if (error) return { error: 'Modification impossible : ' + error.message };
+  revalidatePath(`/app/clients/${id}`);
+  revalidatePath('/app/clients');
+  return { error: null, ok: true };
+}
+
 // ============================================================
 // Sites (CRUD depuis la fiche client)
 // ============================================================
