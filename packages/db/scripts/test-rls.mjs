@@ -403,6 +403,57 @@ try {
   await client.query('rollback');
 }
 
+// --- Test 11 : RPC bureau refusées à un chauffeur (durcissement de rôle) ---
+await client.query('begin');
+try {
+  const o = await client.query(`insert into public.organisations(raison_sociale) values('BUR') returning id`);
+  const org = o.rows[0].id;
+  const c = await client.query(`insert into public.clients(organisation_id, nom) values($1,'C') returning id`, [org]);
+  const s = await client.query(
+    `insert into public.sites(organisation_id, client_id, adresse) values($1,$2,'A') returning id`,
+    [org, c.rows[0].id],
+  );
+  const ouv = await client.query(
+    `insert into public.ouvrages(organisation_id, site_id, type, volume_nominal_litres, periodicite_mois)
+     values($1,$2,'FOSSE_TOUTES_EAUX',3000,48) returning id`,
+    [org, s.rows[0].id],
+  );
+  const i = await client.query(
+    `insert into public.interventions(organisation_id, site_id, status) values($1,$2,'PLANIFIEE') returning id`,
+    [org, s.rows[0].id],
+  );
+
+  await client.query('set local role authenticated');
+  await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+    JSON.stringify({ org_id: org, app_role: 'chauffeur', sub: '00000000-0000-4000-8000-0000000000f5' }),
+  ]);
+
+  const rejette = async (sql, params) => {
+    await client.query('savepoint sp');
+    try {
+      await client.query(sql, params);
+      await client.query('rollback to savepoint sp');
+      return false;
+    } catch {
+      await client.query('rollback to savepoint sp');
+      return true;
+    }
+  };
+
+  const r1 = await rejette(`select public.rpc_supprimer_ouvrage($1)`, [ouv.rows[0].id]);
+  const r2 = await rejette(`select public.rpc_clore_intervention($1, null, 1.0)`, [i.rows[0].id]);
+  await client.query('reset role');
+
+  if (r1) ok('rôle bureau : un chauffeur ne peut pas supprimer un ouvrage (RPC)');
+  else ko('rôle ouvrage', 'suppression acceptée');
+  if (r2) ok('rôle bureau : un chauffeur ne peut pas clôturer une intervention (RPC)');
+  else ko('rôle clôture', 'clôture acceptée');
+} catch (e) {
+  ko('rôle bureau RPC (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
 await client.end();
 
 if (failures.length) {
