@@ -90,6 +90,12 @@ corepack pnpm@9 --filter web dev
 **Polish design — squelettes de chargement (nuit 3)**
 - Primitif `Skeleton` + helpers (en-tête, table, grille de cartes) et `loading.tsx` sur 9 écrans (tableau de bord, clients, interventions, planning, récurrence, conformité + registre, facturation, paramètres). Pendant le chargement serveur, l'utilisateur voit la structure de l'écran plutôt qu'un blanc. Annonce `role="status"` pour les lecteurs d'écran ; animation neutralisée par `prefers-reduced-motion`.
 
+**M6 — séquence de relances R1→R2→R3 (nuit 3)**
+- Escalade « sans réponse, étape suivante » : `rpc_avancer_relance` marque l'étape courante traitée et crée la suivante, planifiée à +14 jours (R3 terminal), avec gestion de la tâche bureau. `rpc_generer_relances_dues` crée une R1 + tâche pour chaque ouvrage en retard sans relance active (idempotent, relançable sans doublon).
+- `/app/recurrence` : bouton « Générer les relances dues », badge d'étape (R1/R2/R3) sur chaque relance, boutons « Aboutie » (succès), « Sans réponse → Rn » (escalade) et annulation. **Toujours aucun envoi réel** (les relances restent une liste d'actions à mener).
+- Note : la génération automatique quotidienne (pg_cron) n'est volontairement PAS activée (effet de bord) ; la fonction SQL est prête, déclenchable manuellement depuis l'écran. À planifier en prod via pg_cron si souhaité.
+- Vérifié : build OK ; séquence testée (génération idempotente, R1→R2 à +14j, R2→R3, R3 terminal).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
@@ -108,7 +114,7 @@ corepack pnpm@9 --filter web dev
 
 - **App mobile chauffeur (M3)** : ✅ socle Expo offline-first livré (nuit 3, typecheck OK). Restent (nécessitent un téléphone / EAS) : test réel sur device (Expo Go ou build dev), relevés terrain (volumes, photos, signature), mode hors ligne éprouvé, file de sync sous coupure réseau, icônes/splash, build EAS. Créer un utilisateur Supabase rôle `chauffeur` pour tester le filtrage RLS.
 - **Planning/dispatch (M2)** : ✅ écran d'affectation jour × camion + file d'attente livré (voir nuit 3). Restent en option : glisser-déposer, carte/itinéraire, et CRUD du parc camions depuis l'UI (aujourd'hui via seed).
-- **Récurrence & relances (M6)** : ✅ moteur A4 (trigger d'échéance), écran CA dormant détaillé et relances livrés (nuit 3). Restent : envoi réel des relances (email/SMS, hors garde-fou), séquence R1/R2/R3 automatisée via pg_cron, portail client (lot 2).
+- **Récurrence & relances (M6)** : ✅ moteur A4 (trigger d'échéance), écran CA dormant détaillé, relances et séquence R1→R2→R3 (escalade + génération idempotente des relances dues) livrés (nuit 3). Restent : envoi réel des relances (email/SMS, hors garde-fou), planification automatique via pg_cron (fonction prête, non activée), portail client (lot 2).
 - **Encaissement Stripe** : ✅ Stripe Checkout en mode test livré (nuit 3). Restent : webhook Stripe pour confirmation hors-redirect (prod), gestion des remboursements/avoirs, lien de paiement par SMS/email (hors garde-fou).
 - **Trackdéchets (BSDD)** : lot 2.
 - Détails : SIRET pro à la création, charte graphique, commune réelle dans le bilan (actuellement « Non précisé » faute de jointure intervention→site sur les bordereaux de démo). CRUD sites/ouvrages depuis la fiche : ✅ fait (nuit 3).
