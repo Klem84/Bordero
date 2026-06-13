@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { PDFDocument } from 'pdf-lib';
 import { construireDonneesBordereau, type ConstruireBordereauInput } from '@bordero/core';
 import { renderBsmvPdf, renderFacturePdf, type FactureData } from './index.js';
 
@@ -37,5 +38,28 @@ describe('génération PDF', () => {
     const buf = await renderFacturePdf(facture);
     expect(buf.length).toBeGreaterThan(1000);
     expect(isPdf(buf)).toBe(true);
+  }, 30000);
+
+  it('le BSMV fait 3 volets (3 pages)', async () => {
+    const buf = await renderBsmvPdf(construireDonneesBordereau(bordereau));
+    const doc = await PDFDocument.load(buf);
+    expect(doc.getPageCount()).toBe(3);
+  }, 30000);
+
+  it('le BSDD est un exemplaire interne (1 page) titré déchets dangereux', async () => {
+    const buf = await renderBsmvPdf(
+      construireDonneesBordereau({ ...bordereau, classification: 'DECHET_DANGEREUX' }),
+    );
+    const doc = await PDFDocument.load(buf);
+    expect(doc.getPageCount()).toBe(1);
+    expect(doc.getTitle()).toContain('déchets dangereux');
+  }, 30000);
+
+  it('le bon de prestation fait 1 page', async () => {
+    const buf = await renderBsmvPdf(
+      construireDonneesBordereau({ ...bordereau, classification: 'DECHET_NON_DANGEREUX_HORS_ANC' }),
+    );
+    const doc = await PDFDocument.load(buf);
+    expect(doc.getPageCount()).toBe(1);
   }, 30000);
 });
