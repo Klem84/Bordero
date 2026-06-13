@@ -178,6 +178,9 @@ corepack pnpm@9 --filter web dev
 **Consolidation — README à jour (nuit 3)**
 - `README.md` racine réécrit pour refléter l'état réel : structure du monorepo, démarrage web, **installation standalone de l'app mobile** (hors workspace pnpm, raison expliquée), commandes de tests/build, gestion de la base Supabase, identifiants de démo, pointeurs vers CLAUDE/PRODUCT/DESIGN/MORNING-REPORT. Utile pour une reprise ou un handover.
 
+**Consolidation — helper de formatage euros (nuit 3)**
+- `lib/format.ts` (euros à 2 décimales, eurosRond arrondi à l'euro) ; les 4 définitions locales dupliquées (tableau de bord, récurrence, facturation, fiche client) sont remplacées par l'import. Aucun changement d'affichage (mêmes options Intl). DRY, moins de risque de divergence.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
