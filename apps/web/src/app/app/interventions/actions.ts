@@ -273,7 +273,14 @@ export async function transmettreBsdd(bordereauId: string): Promise<void> {
       : { trackdechets_statut: 'NON_TRANSMIS' };
   }
 
-  await supabase.from('bordereaux').update(maj as never).eq('id', bordereauId);
+  // Un bordereau déjà BOUCLE est immuable (trigger RG-2.1) : la mise à jour des
+  // colonnes de suivi Trackdéchets échouerait. On ne bloque pas l'utilisateur :
+  // en pratique la transmission a lieu à la clôture (statut EMIS).
+  try {
+    await supabase.from('bordereaux').update(maj as never).eq('id', bordereauId);
+  } catch (e) {
+    console.error('Maj suivi Trackdéchets:', (e as Error).message);
+  }
   revalidatePath('/app/conformite/registre');
 }
 

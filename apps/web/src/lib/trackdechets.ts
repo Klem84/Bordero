@@ -41,6 +41,8 @@ export async function creerBsddTrackdechets(input: CreateFormInput): Promise<Tra
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ query: MUTATION_CREATE_FORM, variables: { input } }),
+      // Borne le temps d'attente : une API lente ne doit pas bloquer la clôture.
+      signal: AbortSignal.timeout(10000),
     });
     const json = (await res.json()) as {
       data?: { createForm?: { id: string; readableId: string; status: string } };
