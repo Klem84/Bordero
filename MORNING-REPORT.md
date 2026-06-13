@@ -8,7 +8,24 @@ Le parcours métier complet de Bordero fonctionne **de bout en bout** et est dé
 
 ## État de vérification (dernière passe)
 
-Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 45 (core) + 2 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 9/9 ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk de la nuit a été commité et poussé sur `auto/overnight-build` après build/tests verts.
+Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 58 (core) + 2 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 9/9 ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk a été commité et poussé sur `auto/overnight-build` après build/tests verts.
+
+## Lot 2 (démarré le 2026-06-13)
+
+Sur ta demande, j'ai enchaîné sur le lot 2 en autonomie. Trois briques livrées, chacune avec ses tests, build et RLS verts à chaque commit.
+
+**Correctif préalable — génération PDF (bloquant trouvé en testant la démo).** `@react-pdf/renderer` échouait dans le runtime serveur de Next (`reading 'S'`, condition react-server) : la clôture émettait le bordereau mais sans PDF. Migration de `packages/pdf` vers **pdf-lib** (pur JS, sans React), mêmes fonctions exportées, fonctionne en serveur Next et en serverless. Les 4 bordereaux de démo ont été régénérés. Correctif d'auth aussi : le hook `custom_access_token` ne pouvait pas lire `app_users` (RLS), d'où une app vide à la connexion ; politique ajoutée pour `supabase_auth_admin`.
+
+**Optimisation de tournée 2-opt (M2).** Algorithme `optimiserTournee` dans `@bordero/core` (plus proche voisin + 2-opt sur distance haversine, dépôt optionnel, jamais pire que l'ordre fourni), 7 tests. RPC `rpc_optimiser_tournee` (cloisonnée, garde de couverture exacte). Bouton « Optimiser l'ordre » sur chaque colonne camion du planning. Pas de dépendance Mapbox (haversine) pour rester hors ligne ; une matrice routière réelle pourra être injectée plus tard.
+
+**Portail public de réservation.** Page publique `/reserver/[slug]` (hors auth) où un prospect dépose une demande (coordonnées, adresse géocodée data.gouv, type d'ouvrage, créneau, message). Aucune table exposée à anon : insertion via RPC `rpc_creer_demande_reservation` (résolution par slug, piège honeypot anti-spam). Back-office `/app/reservations` (entrée sidebar) : liste filtrable, conversion en client en un clic (préremplissage de la fiche), marquage traitée/rejetée. Vérifié : anon crée mais ne peut pas lire la table. 2 demandes seedées.
+
+**Intégration Trackdéchets (BSDD).** Mapping pur `construireBsddInput` (core) vers la structure `CreateFormInput` de l'API Trackdéchets (mutation `createForm`) + garde `bsddTransmissible`, 6 tests. Colonnes de suivi sur `bordereaux`. À la clôture d'un déchet dangereux, transmission best-effort via `lib/trackdechets` (client GraphQL gardé par `TRACKDECHETS_TOKEN`, bac à sable par défaut). Registre : colonne Trackdéchets (n° lisible si transmis, sinon « Non transmis » + bouton Transmettre). **Blocage contourné** : aucun jeton Trackdéchets n'étant fourni, l'intégration tourne en **mode dégradé** documenté (le bordereau BSDD reste « non transmis ») ; le flux complet est prêt et s'activera dès qu'un `TRACKDECHETS_TOKEN` sera configuré dans `.env.local`. Seed : un bordereau `BSDD-2026-90001` non transmis pour la démo.
+
+**À faire de ton côté pour le lot 2 :**
+- **Trackdéchets** : créer un compte sur le bac à sable (sandbox.trackdechets.beta.gouv.fr), générer un jeton API, le mettre dans `TRACKDECHETS_TOKEN` (et `TRACKDECHETS_API_URL` pour la prod). Le mapping devra être validé/ajusté contre le schéma réel du bac à sable (codes déchets, opération de traitement, SIRET réels).
+- **2-opt** : option future, brancher la matrice de distances Mapbox réelle à la place du haversine pour le temps de trajet routier.
+- **Réservation** : communiquer l'URL publique `/reserver/vidanges-demo-aveyron` (à brancher sur le domaine de l'entreprise) ; envoi d'un email de notification au bureau à chaque demande (non câblé, garde-fou).
 
 ## Comment lancer et tester l'app (au réveil)
 
