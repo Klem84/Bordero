@@ -33,6 +33,7 @@ export async function creerClientSite(
   const telephone = String(formData.get('telephone') ?? '');
   const email = String(formData.get('email') ?? '');
   const adresse = String(formData.get('adresse') ?? '').trim();
+  const siret = String(formData.get('siret') ?? '').trim();
   const lngRaw = formData.get('lng');
   const latRaw = formData.get('lat');
   const lng = lngRaw ? Number(lngRaw) : null;
@@ -51,6 +52,7 @@ export async function creerClientSite(
     p_adresse: adresse,
     p_lng: lng,
     p_lat: lat,
+    p_siret: siret || null,
   };
   const { data, error } = await supabase.rpc('rpc_creer_client_site', params as never);
 

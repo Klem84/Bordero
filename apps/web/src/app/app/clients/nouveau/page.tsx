@@ -87,6 +87,10 @@ export default function NouveauClientPage() {
           </Field>
         </div>
 
+        <Field label="SIRET" htmlFor="siret" hint="Pour les professionnels et collectivités (14 chiffres).">
+          <Input id="siret" name="siret" inputMode="numeric" placeholder="123 456 789 00012" />
+        </Field>
+
         <div className="relative">
           <Label htmlFor="adresse">Adresse</Label>
           <Input

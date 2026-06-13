@@ -22,6 +22,7 @@ interface ClientDetail {
   type: string;
   telephone: string | null;
   email: string | null;
+  siret: string | null;
 }
 interface SiteRow {
   id: string;
@@ -45,7 +46,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const { data: clientData } = await supabase
     .from('clients')
-    .select('id, nom, type, telephone, email')
+    .select('id, nom, type, telephone, email, siret')
     .eq('id', id)
     .maybeSingle();
   const client = clientData as ClientDetail | null;
@@ -106,7 +107,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Info label="Téléphone" value={client.telephone} mono />
         <Info label="Email" value={client.email} />
-        <Info label="Sites" value={String(sites.length)} />
+        {client.siret ? (
+          <Info label="SIRET" value={client.siret} mono />
+        ) : (
+          <Info label="Sites" value={String(sites.length)} />
+        )}
       </div>
 
       <SitesOuvrages clientId={client.id} sites={sitesWithOuvrages} />

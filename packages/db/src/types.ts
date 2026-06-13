@@ -2400,6 +2400,7 @@ export type Database = {
           p_lat: number
           p_lng: number
           p_nom: string
+          p_siret?: string
           p_telephone: string
           p_type: Database["public"]["Enums"]["client_type"]
         }
