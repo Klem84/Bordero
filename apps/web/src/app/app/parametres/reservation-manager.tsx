@@ -107,10 +107,12 @@ export function ReservationManager({
               Accepter les réservations en ligne
             </label>
             {state?.error ? (
-              <p className="rounded-lg bg-danger-subtle px-3 py-2 text-sm text-danger">{state.error}</p>
+              <p role="alert" className="rounded-lg bg-danger-subtle px-3 py-2 text-sm text-danger">
+                {state.error}
+              </p>
             ) : null}
             {state?.ok ? (
-              <p className="flex items-center gap-1 text-sm text-success">
+              <p role="status" aria-live="polite" className="flex items-center gap-1 text-sm text-success">
                 <Check className="h-4 w-4" /> Enregistré.
               </p>
             ) : null}

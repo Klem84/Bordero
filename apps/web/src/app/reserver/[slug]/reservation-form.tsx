@@ -15,7 +15,11 @@ export function ReservationForm({ slug }: { slug: string }) {
 
   if (state?.ok) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-success/30 bg-success-subtle px-6 py-10 text-center">
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex flex-col items-center gap-3 rounded-xl border border-success/30 bg-success-subtle px-6 py-10 text-center"
+      >
         <CheckCircle2 className="h-10 w-10 text-success" />
         <h2 className="text-lg font-semibold text-ink">Demande envoyée</h2>
         <p className="max-w-sm text-sm text-ink-muted">
@@ -84,7 +88,11 @@ export function ReservationForm({ slug }: { slug: string }) {
         />
       </div>
 
-      {state?.error ? <p className="text-sm text-danger">{state.error}</p> : null}
+      {state?.error ? (
+        <p role="alert" className="text-sm text-danger">
+          {state.error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={pending} className="w-full justify-center">
         <Send className="h-4 w-4" /> {pending ? 'Envoi…' : 'Envoyer ma demande'}

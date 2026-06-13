@@ -21,9 +21,11 @@ export function OptimiserButton({ tourneeId }: { tourneeId: string }) {
       >
         <Waypoints className="h-4 w-4" />
       </button>
-      {pending ? <span className="text-[11px] text-ink-muted">Calcul…</span> : null}
-      {!pending && state?.phrase ? <span className="text-[11px] text-success">{state.phrase}</span> : null}
-      {!pending && state?.error ? <span className="text-[11px] text-danger">{state.error}</span> : null}
+      <span role="status" aria-live="polite" className="text-[11px]">
+        {pending ? <span className="text-ink-muted">Calcul…</span> : null}
+        {!pending && state?.phrase ? <span className="text-success">{state.phrase}</span> : null}
+        {!pending && state?.error ? <span className="text-danger">{state.error}</span> : null}
+      </span>
     </form>
   );
 }
