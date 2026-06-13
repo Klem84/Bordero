@@ -102,6 +102,11 @@ corepack pnpm@9 --filter web dev
 - **Webhook Stripe (prod) à câbler par toi** : l'encaissement actuel vérifie la session au retour (suffisant en staging). Pour la prod, ajouter un endpoint `POST /api/stripe/webhook` qui vérifie la signature (`STRIPE_WEBHOOK_SECRET`) et appelle `rpc_enregistrer_paiement` sur l'événement `checkout.session.completed`, afin de fiabiliser l'encaissement même si l'utilisateur ferme l'onglet. (Non fait : nécessite une URL publique + secret webhook, hors garde-fou nocturne.)
 - Vérifié : build OK ; avoir testé (totaux négatifs, lignes négatives, doublon rejeté, avoir-sur-avoir rejeté).
 
+**App mobile — relevés terrain (nuit 3)**
+- L'écran intervention de l'app chauffeur propose un formulaire de relevé (volume pompé, observations, prochaine vidange conseillée) dès que l'intervention est « Sur site » ou « Terminée ». Offline-first : le relevé est empilé dans l'outbox SQLite (type `releve`) et poussé à la synchronisation.
+- `rpc_sync_releve` (idempotent par `client_event_uuid`) fait l'upsert dans `intervention_ouvrages` et reporte l'échéance sur l'ouvrage : la date conseillée par le chauffeur prévaut sur l'échéance calculée (A4).
+- Vérifié : typecheck mobile OK ; RPC testée (upsert, échéance A4, idempotence, cloisonnement).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
