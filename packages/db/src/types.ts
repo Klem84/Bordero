@@ -1988,6 +1988,8 @@ export type Database = {
           prestation_label: string | null
           site_adresse: string | null
           site_id: string | null
+          site_lat: number | null
+          site_lng: number | null
           status: Database["public"]["Enums"]["intervention_status"] | null
           tournee_id: string | null
           urgence: boolean | null

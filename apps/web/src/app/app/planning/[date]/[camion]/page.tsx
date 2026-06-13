@@ -11,11 +11,33 @@ interface RouteRow {
   urgence: boolean;
   fenetre: string | null;
   site_adresse: string | null;
+  site_lng: number | null;
+  site_lat: number | null;
   client_nom: string | null;
   prestation_label: string | null;
   duree_min: number | null;
   ouvrage_type: string | null;
   volume_estime_m3: number | null;
+}
+
+/**
+ * URL Mapbox Static Images : carte des arrêts avec pastilles numérotées.
+ * Pas de librairie JS (simple <img>), s'imprime proprement. `null` si pas de
+ * token ou aucun arrêt géolocalisé.
+ */
+function carteTourneeUrl(stops: RouteRow[]): string | null {
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  if (!token) return null;
+  const geo = stops.filter((s) => s.site_lng != null && s.site_lat != null);
+  if (geo.length === 0) return null;
+  const overlays = geo
+    .map((s, i) => {
+      const label = (s.ordre_passage ?? i + 1) <= 9 ? String(s.ordre_passage ?? i + 1) : '';
+      const pin = label ? `pin-s-${label}` : 'pin-s';
+      return `${pin}+256b76(${s.site_lng},${s.site_lat})`;
+    })
+    .join(',');
+  return `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${overlays}/auto/680x340@2x?padding=48&access_token=${token}`;
 }
 
 const FENETRE: Record<string, string> = {
@@ -52,7 +74,7 @@ export default async function FeuilleRoutePage({
     supabase
       .from('v_planning_interventions')
       .select(
-        'id, ordre_passage, urgence, fenetre, site_adresse, client_nom, prestation_label, duree_min, ouvrage_type, volume_estime_m3',
+        'id, ordre_passage, urgence, fenetre, site_adresse, site_lng, site_lat, client_nom, prestation_label, duree_min, ouvrage_type, volume_estime_m3',
       )
       .eq('date_prevue', date)
       .eq('camion_id', camion)
@@ -72,6 +94,7 @@ export default async function FeuilleRoutePage({
   }).format(new Date(date + 'T00:00:00Z'));
   const volTotal = rows.reduce((s, r) => s + (r.volume_estime_m3 ?? 0), 0);
   const dureeTotal = rows.reduce((s, r) => s + (r.duree_min ?? 0), 0);
+  const carteUrl = carteTourneeUrl(rows);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -104,6 +127,15 @@ export default async function FeuilleRoutePage({
           <span>Volume estimé : {fmtVol(volTotal)}</span>
           <span>Durée estimée : {fmtDuree(dureeTotal)}</span>
         </div>
+
+        {carteUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={carteUrl}
+            alt="Carte des arrêts de la tournée"
+            className="mt-4 w-full rounded-lg border border-border"
+          />
+        ) : null}
 
         {rows.length === 0 ? (
           <p className="mt-6 text-sm text-ink-muted">Aucune intervention affectée à ce camion ce jour.</p>
