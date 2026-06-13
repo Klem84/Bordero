@@ -121,6 +121,10 @@ corepack pnpm@9 --filter web dev
 **Polish design — titres de page (nuit 3)**
 - Template de titre racine « %s · Bordero » et `metadata.title` par écran (tableau de bord, clients, interventions, planning, récurrence, conformité + registre + bilan, facturation, paramètres, nouvelle commande, intervention). La fiche client affiche le nom du client dans l'onglet (generateMetadata). Onglets lisibles, repérage facilité, meilleur référencement/accessibilité.
 
+**M2 — feuille de route de tournée imprimable (nuit 3)**
+- Route `/app/planning/[date]/[camion]` : feuille de route prête à imprimer (en-tête organisation + camion + date, ordre de passage, client/adresse, prestation, ouvrage, créneau, volume et durée estimés, totaux, ligne signature/horaires). Bouton « Imprimer » et lien imprimante sur chaque colonne camion du planning.
+- Mise en page d'impression propre : la coquille (sidebar/drawer/en-tête mobile) est masquée à l'impression, contenu en pleine largeur. Donne au dirigeant un document papier à remettre au chauffeur qui n'utilise pas encore l'app.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
