@@ -2,10 +2,17 @@
 
 import { createHash } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
-import { construireDonneesBordereau, type DechetClassification } from '@bordero/core';
+import {
+  construireDonneesBordereau,
+  construireBsddInput,
+  bsddTransmissible,
+  type DechetClassification,
+  type ConstruireBsddInput,
+} from '@bordero/core';
 import { renderBsmvPdf } from '@bordero/pdf';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { creerBsddTrackdechets } from '@/lib/trackdechets';
 import { getCurrentUser } from '@/lib/auth';
 
 export interface ClotureState {
@@ -54,10 +61,12 @@ export async function cloturerIntervention(
 
   const { data: clientData } = await supabase
     .from('clients')
-    .select('nom')
+    .select('nom, siret, telephone, email')
     .eq('id', site?.client_id ?? '')
     .maybeSingle();
-  const client = one<{ nom: string }>(clientData);
+  const client = one<{ nom: string; siret: string | null; telephone: string | null; email: string | null }>(
+    clientData,
+  );
 
   const { data: orgData } = await supabase
     .from('organisations')
@@ -131,7 +140,146 @@ export async function cloturerIntervention(
     console.error('PDF/stockage bordereau:', e);
   }
 
+  // 4) BSDD : transmission à Trackdéchets (déchets dangereux), best-effort.
+  if (res.type === 'BSDD') {
+    await transmettreBsdd(res.bordereau_id);
+  }
+
   revalidatePath('/app/conformite/registre');
   revalidatePath(`/app/interventions/${interventionId}`);
   return { error: null, ok: { numero: res.numero } };
+}
+
+/**
+ * Transmet (ou retransmet) un bordereau BSDD à Trackdéchets. Réassemble les
+ * données depuis la base, applique le mapping (@bordero/core) et persiste
+ * l'identifiant/statut renvoyé. Mode dégradé : si le jeton n'est pas configuré
+ * ou si des champs obligatoires manquent (SIRET, quantité), le bordereau est
+ * marqué NON_TRANSMIS sans bloquer. Cloisonné par organisation.
+ */
+export async function transmettreBsdd(bordereauId: string): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user?.orgId) return;
+  const supabase = await createClient();
+
+  const { data: bData } = await supabase
+    .from('bordereaux')
+    .select('id, numero, type, statut, intervention_id, exutoire_id, quantite_pompee_m3, nature_matiere')
+    .eq('id', bordereauId)
+    .maybeSingle();
+  const bord = one<{
+    id: string;
+    numero: string;
+    type: string;
+    statut: string;
+    intervention_id: string | null;
+    exutoire_id: string | null;
+    quantite_pompee_m3: number | null;
+    nature_matiere: string | null;
+  }>(bData);
+  if (!bord || bord.type !== 'BSDD') return;
+
+  // Producteur = propriétaire de l'installation (client).
+  let client: { nom: string; siret: string | null; telephone: string | null; email: string | null } | null = null;
+  if (bord.intervention_id) {
+    const { data: intData } = await supabase
+      .from('interventions')
+      .select('site_id')
+      .eq('id', bord.intervention_id)
+      .maybeSingle();
+    const siteId = one<{ site_id: string }>(intData)?.site_id ?? '';
+    const { data: siteData } = await supabase.from('sites').select('client_id').eq('id', siteId).maybeSingle();
+    const clientId = one<{ client_id: string }>(siteData)?.client_id ?? '';
+    const { data: cData } = await supabase
+      .from('clients')
+      .select('nom, siret, telephone, email')
+      .eq('id', clientId)
+      .maybeSingle();
+    client = one<{ nom: string; siret: string | null; telephone: string | null; email: string | null }>(cData);
+  }
+
+  const { data: orgData } = await supabase
+    .from('organisations')
+    .select('raison_sociale, siret')
+    .eq('id', user.orgId)
+    .maybeSingle();
+  const org = one<{ raison_sociale: string; siret: string | null }>(orgData);
+
+  const { data: agrData } = await supabase
+    .from('agrements')
+    .select('departement_code')
+    .eq('statut', 'actif')
+    .limit(1)
+    .maybeSingle();
+  const agr = one<{ departement_code: string }>(agrData);
+
+  // Destinataire = exutoire (celui du bordereau, sinon le premier de l'organisation).
+  let exutoire: { raison_sociale: string; siret: string | null; adresse: string | null; contact: string | null } | null =
+    null;
+  {
+    const q = supabase.from('exutoires').select('raison_sociale, siret, adresse, contact');
+    const { data: exData } = bord.exutoire_id
+      ? await q.eq('id', bord.exutoire_id).maybeSingle()
+      : await q.limit(1).maybeSingle();
+    exutoire = one<{ raison_sociale: string; siret: string | null; adresse: string | null; contact: string | null }>(
+      exData,
+    );
+  }
+
+  const brut: ConstruireBsddInput = {
+    reference: bord.numero,
+    natureDechet: bord.nature_matiere ?? 'Déchet dangereux',
+    quantiteTonnes: bord.quantite_pompee_m3, // approximation m³ ~ tonne (boues)
+    producteur: {
+      siret: client?.siret ?? null,
+      nom: client?.nom ?? '',
+      adresse: null,
+      contact: client?.nom ?? null,
+      telephone: client?.telephone ?? null,
+      email: client?.email ?? null,
+    },
+    transporteur: {
+      siret: org?.siret ?? null,
+      nom: org?.raison_sociale ?? '',
+      adresse: null,
+      contact: null,
+      telephone: null,
+      email: null,
+      recepisse: null,
+      departement: agr?.departement_code ?? null,
+    },
+    destinataire: {
+      siret: exutoire?.siret ?? null,
+      nom: exutoire?.raison_sociale ?? '',
+      adresse: exutoire?.adresse ?? null,
+      contact: exutoire?.contact ?? null,
+      telephone: null,
+      email: null,
+    },
+  };
+
+  let maj: Record<string, unknown>;
+  if (!bsddTransmissible(brut).ok) {
+    maj = { trackdechets_statut: 'NON_TRANSMIS' };
+  } else {
+    const r = await creerBsddTrackdechets(construireBsddInput(brut));
+    maj = r.transmis
+      ? {
+          trackdechets_id: r.id ?? null,
+          trackdechets_readable_id: r.readableId ?? null,
+          trackdechets_statut: r.statut ?? 'SENT',
+          trackdechets_transmis_le: new Date().toISOString(),
+        }
+      : { trackdechets_statut: 'NON_TRANSMIS' };
+  }
+
+  await supabase.from('bordereaux').update(maj as never).eq('id', bordereauId);
+  revalidatePath('/app/conformite/registre');
+}
+
+/** Action de formulaire : retransmettre un BSDD depuis le registre. */
+export async function transmettreBsddAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('bordereau_id') ?? '');
+  if (!id) return;
+  await transmettreBsdd(id);
 }

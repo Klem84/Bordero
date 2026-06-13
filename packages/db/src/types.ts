@@ -283,6 +283,10 @@ export type Database = {
           quantite_pompee_m3: number | null
           signe_client_le: string | null
           statut: Database["public"]["Enums"]["bordereau_statut"]
+          trackdechets_id: string | null
+          trackdechets_readable_id: string | null
+          trackdechets_statut: string | null
+          trackdechets_transmis_le: string | null
           type: Database["public"]["Enums"]["bordereau_type"]
           updated_at: string
         }
@@ -307,6 +311,10 @@ export type Database = {
           quantite_pompee_m3?: number | null
           signe_client_le?: string | null
           statut?: Database["public"]["Enums"]["bordereau_statut"]
+          trackdechets_id?: string | null
+          trackdechets_readable_id?: string | null
+          trackdechets_statut?: string | null
+          trackdechets_transmis_le?: string | null
           type: Database["public"]["Enums"]["bordereau_type"]
           updated_at?: string
         }
@@ -331,6 +339,10 @@ export type Database = {
           quantite_pompee_m3?: number | null
           signe_client_le?: string | null
           statut?: Database["public"]["Enums"]["bordereau_statut"]
+          trackdechets_id?: string | null
+          trackdechets_readable_id?: string | null
+          trackdechets_statut?: string | null
+          trackdechets_transmis_le?: string | null
           type?: Database["public"]["Enums"]["bordereau_type"]
           updated_at?: string
         }

@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { dateFr } from '@/lib/format';
 import { BORDEREAU_STATUT } from '@/lib/statuts';
+import { transmettreBsddAction } from '@/app/app/interventions/actions';
 
 interface BordereauRow {
   id: string;
@@ -17,6 +18,8 @@ interface BordereauRow {
   created_at: string;
   quantite_pompee_m3: number | null;
   pdf_url: string | null;
+  trackdechets_statut: string | null;
+  trackdechets_readable_id: string | null;
 }
 
 export const metadata = { title: "Registre" };
@@ -31,7 +34,9 @@ export default async function RegistrePage({
 
   let query = supabase
     .from('bordereaux')
-    .select('id, numero, type, statut, created_at, quantite_pompee_m3, pdf_url')
+    .select(
+      'id, numero, type, statut, created_at, quantite_pompee_m3, pdf_url, trackdechets_statut, trackdechets_readable_id',
+    )
     .order('created_at', { ascending: false })
     .limit(500);
   if (statut) query = query.eq('statut', statut);
@@ -94,6 +99,7 @@ export default async function RegistrePage({
           <Th>Date</Th>
           <Th className="text-right">Volume (m³)</Th>
           <Th>Statut</Th>
+          <Th>Trackdéchets</Th>
           <Th className="text-right" />
         </Thead>
         <Tbody>
@@ -111,6 +117,19 @@ export default async function RegistrePage({
                   <Td>
                     <Badge tone={s.tone}>{s.label}</Badge>
                   </Td>
+                  <Td>
+                    {b.type !== 'BSDD' ? (
+                      <span className="text-ink-muted/50">—</span>
+                    ) : b.trackdechets_readable_id ? (
+                      <Badge tone="success">{b.trackdechets_readable_id}</Badge>
+                    ) : (
+                      <form action={transmettreBsddAction} className="flex items-center gap-2">
+                        <input type="hidden" name="bordereau_id" value={b.id} />
+                        <Badge tone="warning">Non transmis</Badge>
+                        <button className="text-xs font-medium text-brand hover:underline">Transmettre</button>
+                      </form>
+                    )}
+                  </Td>
                   <Td className="text-right">
                     {b.pdf_url ? (
                       <a href={`/app/conformite/registre/${b.id}/pdf`} className="font-medium text-brand hover:underline">
@@ -124,7 +143,7 @@ export default async function RegistrePage({
               );
             })
           ) : (
-            <EmptyRow colSpan={6}>
+            <EmptyRow colSpan={7}>
               <EmptyState
                 icon={FileText}
                 title="Aucun bordereau sur cette période"

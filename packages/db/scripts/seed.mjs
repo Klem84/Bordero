@@ -290,6 +290,19 @@ try {
     );
   }
 
+  // Scénario déchets dangereux (BSDD / Trackdéchets, lot 2) : on dote le garage
+  // et l'exutoire d'un SIRET, et on émet un bordereau BSDD non encore transmis.
+  await client.query(
+    `update public.clients set siret = '34326262100025' where organisation_id = $1 and nom = 'Garage Aveyron Auto'`,
+    [DEMO_ORG],
+  );
+  await client.query(`update public.exutoires set siret = '20000012300017' where organisation_id = $1`, [DEMO_ORG]);
+  await client.query(
+    `insert into public.bordereaux(organisation_id, intervention_id, exutoire_id, type, numero, statut, nature_matiere, quantite_pompee_m3, trackdechets_statut)
+     values ($1, $2, $3, 'BSDD', 'BSDD-2026-90001', 'EMIS', 'Boues de séparateur à hydrocarbures', 1.2, 'NON_TRANSMIS')`,
+    [DEMO_ORG, intvOlemps, exutoireId],
+  );
+
   // Tâches bureau de démo (alimentent « Tâches à faire » du tableau de bord ;
   // en réel, créées par les relances de récurrence).
   await client.query(
