@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { buttonClasses } from '@/components/ui/button';
 import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 import { CLIENT_TYPE } from '@/lib/statuts';
 
 interface ClientRow {
@@ -65,7 +66,13 @@ export default async function ClientsPage() {
             ))
           ) : (
             <EmptyRow colSpan={4}>
-              Aucun client pour l'instant. Importez votre fichier ou créez le premier.
+              <EmptyState
+                icon={Users}
+                title="Aucun client pour l'instant"
+                description="Créez votre premier client pour pouvoir prendre des commandes et générer des bordereaux."
+                actionHref="/app/clients/nouveau"
+                actionLabel="Nouveau client"
+              />
             </EmptyRow>
           )}
         </Tbody>

@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import { Truck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 import { INTERVENTION_STATUT } from '@/lib/statuts';
 
 interface InterventionRow {
@@ -62,7 +64,15 @@ export default async function InterventionsPage() {
               );
             })
           ) : (
-            <EmptyRow colSpan={4}>Aucune intervention. Créez une commande pour en générer.</EmptyRow>
+            <EmptyRow colSpan={4}>
+              <EmptyState
+                icon={Truck}
+                title="Aucune intervention"
+                description="Les interventions naissent d'une commande. Prenez une commande depuis la fiche d'un client."
+                actionHref="/app/clients"
+                actionLabel="Aller aux clients"
+              />
+            </EmptyRow>
           )}
         </Tbody>
       </Table>

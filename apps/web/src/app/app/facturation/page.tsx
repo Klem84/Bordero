@@ -1,10 +1,11 @@
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Receipt } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card } from '@/components/ui/card';
 import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { FACTURE_STATUT } from '@/lib/statuts';
 import { isStripeConfigured, isStripeTestMode } from '@/lib/stripe';
 import { creerSessionPaiement } from './actions';
@@ -182,7 +183,15 @@ export default async function FacturationPage({
               );
             })
           ) : (
-            <EmptyRow colSpan={5}>Aucune facture. Facturez une intervention terminée.</EmptyRow>
+            <EmptyRow colSpan={5}>
+              <EmptyState
+                icon={Receipt}
+                title="Aucune facture"
+                description="Facturez une intervention terminée depuis son écran pour générer la première facture."
+                actionHref="/app/interventions"
+                actionLabel="Voir les interventions"
+              />
+            </EmptyRow>
           )}
         </Tbody>
       </Table>

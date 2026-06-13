@@ -1,9 +1,11 @@
+import { FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { buttonClasses } from '@/components/ui/button';
 import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/empty-state';
 import { BORDEREAU_STATUT } from '@/lib/statuts';
 
 interface BordereauRow {
@@ -121,7 +123,15 @@ export default async function RegistrePage({
               );
             })
           ) : (
-            <EmptyRow colSpan={6}>Aucun bordereau sur cette période.</EmptyRow>
+            <EmptyRow colSpan={6}>
+              <EmptyState
+                icon={FileText}
+                title="Aucun bordereau sur cette période"
+                description="Les bordereaux sont générés à la clôture des interventions. Clôturez une intervention terminée pour alimenter le registre."
+                actionHref="/app/interventions"
+                actionLabel="Voir les interventions"
+              />
+            </EmptyRow>
           )}
         </Tbody>
       </Table>
