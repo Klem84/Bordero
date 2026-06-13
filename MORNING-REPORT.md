@@ -130,6 +130,9 @@ corepack pnpm@9 --filter web dev
 - Seed : les 3 bordereaux bouclés de démo sont reliés à des interventions de communes distinctes (Onet-le-Château, Olemps, Rodez) et à l'exutoire (STEP), pour un bilan démontrable par commune et par filière.
 - Vérifié : build OK, 36 core, parsing commune contrôlé.
 
+**M1 — SIRET client (nuit 3)**
+- Saisie du SIRET à la création d'un client (champ dédié, pertinent pour professionnels/collectivités) et affichage sur la fiche client quand renseigné. La RPC `rpc_creer_client_site` accepte désormais le SIRET (la colonne existait déjà). Édition du SIRET sur la fiche : à ajouter ultérieurement (pas de formulaire d'édition client pour l'instant).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
