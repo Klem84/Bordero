@@ -143,6 +143,9 @@ corepack pnpm@9 --filter web dev
 **M1 — recherche de clients (nuit 3)**
 - Champ de recherche sur la liste clients (formulaire GET, fonctionne sans JS) filtrant par nom, email ou téléphone côté serveur (ilike). Bouton « Effacer », et état vide distinct « Aucun résultat pour … ». Utile dès que le fichier clients grandit.
 
+**Qualité — parsing commune dans le core + tests (nuit 3)**
+- `communeDeAdresse` (extraction de la commune après le code postal, utilisée par le bilan A3) remontée dans `@bordero/core` : règle métier non dupliquée, importée par le web. 4 tests ajoutés (code postal, communes composées type Onet-le-Château / Saint-Côme-d'Olt, zone sans numéro, absence de code postal). Suite core à 40 tests.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
