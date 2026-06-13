@@ -149,6 +149,9 @@ corepack pnpm@9 --filter web dev
 **Facturation — filtre par statut + a11y (nuit 3)**
 - Filtre par statut sur la liste de facturation (formulaire GET, totaux conservés sur l'ensemble, affichage filtré, état vide dédié + réinitialisation). La bannière de retour Stripe est désormais annoncée aux lecteurs d'écran (`role="status"` + `aria-live="polite"`).
 
+**Tableau de bord — « Tâches à faire » (nuit 3)**
+- Section sous les tuiles listant les tâches bureau ouvertes (alimentées par les relances de récurrence) : libellé + échéance (en retard signalée), état vide actionnable. Boucle visiblement le flux relance → tâche → bureau. Seed : 2 tâches de démo.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
