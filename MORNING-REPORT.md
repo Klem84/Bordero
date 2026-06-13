@@ -230,4 +230,6 @@ corepack pnpm@9 --filter web dev
 
 ## Journal de vérifications (non-régression)
 
+- A11y : repère de navigation principal nommé (`aria-label` sur la sidebar). Passe verte (build, 45 core + 2 pdf, 9/9 RLS).
+
 - Passe verte confirmée : `web build` OK, 45 tests core + 2 pdf, 9/9 RLS, typecheck mobile OK, arbre de travail propre. Branche `auto/overnight-build` stable et à jour.
