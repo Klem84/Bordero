@@ -10,7 +10,7 @@ Stack : Next.js (App Router, React 19) + Supabase (PostgreSQL/RLS, Auth, Storage
 |---|---|
 | `apps/web` | Back-office Next.js (tableau de bord, clients, planning, conformité, facturation, récurrence, paramètres). |
 | `apps/mobile` | App chauffeur Expo, offline-first (**hors workspace pnpm**, voir ci-dessous). |
-| `packages/core` | Règles métier partagées et testées (machine à états, routage documentaire RG-8.1, échéances A4, tarification, quota/bilan). |
+| `packages/core` | Règles métier partagées et testées (machine à états, routage documentaire RG-8.1, échéances A4, tarification, quota/bilan, optimisation de tournée 2-opt, mapping BSDD Trackdéchets). |
 | `packages/db` | Migrations Supabase, types générés, scripts (seed, SQL, tests RLS). |
 
 ## Prérequis
@@ -60,6 +60,14 @@ SUPABASE_ACCESS_TOKEN=<token> corepack pnpm@9 exec supabase gen types typescript
 ```
 
 SQL ad hoc : `node packages/db/scripts/sql.mjs "<sql>"`.
+
+## Lot 2 (réservation, BSDD, optimisation de tournée)
+
+- **Portail public de réservation** : page `/reserver/<slug>` (hors authentification) où un prospect dépose une demande d'intervention. Insertion via RPC `anon` (aucune table exposée), atterrissage en back-office sous `/app/reservations`. Démo : `/reserver/vidanges-demo-aveyron`.
+- **Optimisation de tournée (2-opt)** : bouton « Optimiser l'ordre » sur le planning. Distances de trajet réelles via l'API Matrix Mapbox (token `NEXT_PUBLIC_MAPBOX_TOKEN`), repli automatique sur le vol d'oiseau. L'algorithme vit dans `@bordero/core` (`optimiserTournee`).
+- **Trackdéchets (BSDD)** : à la clôture d'un déchet dangereux, transmission au registre national via l'API Trackdéchets (`createForm`). Nécessite `TRACKDECHETS_TOKEN` ; sans jeton, mode dégradé (bordereau « non transmis », retransmissible depuis le registre). Voir `.env.example`.
+
+> Génération PDF (bordereaux, factures, bilans) : **pdf-lib** (pur JS), choisi car `@react-pdf/renderer` échoue dans le runtime serveur de Next. Fonctions dans `packages/pdf`.
 
 ## Documentation interne
 
