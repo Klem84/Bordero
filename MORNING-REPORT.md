@@ -115,6 +115,9 @@ corepack pnpm@9 --filter web dev
 - `rpc_sync_signature` (idempotent par `client_event_uuid`) enregistre `signataire_nom` + `client_absent` sur l'intervention. (La signature dessinée à l'écran est repoussée : elle nécessite un module natif de capture ; le nom + l'horodatage de l'événement font foi pour le MVP.)
 - Vérifié : typecheck mobile OK ; RPC testée (nom, idempotence, client absent, cloisonnement).
 
+**App mobile — écran « À synchroniser » (nuit 3)**
+- Écran dédié listant les actions terrain en attente (changement d'état, relevé, signature) avec résumé lisible et horodatage, bouton « Synchroniser maintenant » (retour : envoyés / en attente), état vide rassurant. Le compteur de la tournée y renvoie d'un toucher. Donne au chauffeur la visibilité sur ce qui reste à remonter quand le réseau revient.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
