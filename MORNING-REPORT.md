@@ -169,6 +169,9 @@ corepack pnpm@9 --filter web dev
 **Clients — export CSV (nuit 3)**
 - Export CSV de la liste clients (nom, type, téléphone, email, SIRET), recherche respectée, BOM UTF-8 + séparateur `;`. Bouton « Exporter CSV » dans l'en-tête. Sauvegarde / reprise de fichier facilitée. (Exports CSV désormais sur registre, facturation et clients.)
 
+**M2 — carte des arrêts sur la feuille de route (nuit 3)**
+- La feuille de route imprimable affiche une carte Mapbox (image statique, pastilles numérotées par ordre de passage) des arrêts géolocalisés. Pas de librairie JS (simple image, s'imprime), affichée seulement si le token Mapbox est présent. La vue planning expose désormais `site_lng`/`site_lat`. Token Mapbox public lu depuis `NEXT_PUBLIC_MAPBOX_TOKEN`.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
