@@ -107,6 +107,9 @@ corepack pnpm@9 --filter web dev
 - `rpc_sync_releve` (idempotent par `client_event_uuid`) fait l'upsert dans `intervention_ouvrages` et reporte l'échéance sur l'ouvrage : la date conseillée par le chauffeur prévaut sur l'échéance calculée (A4).
 - Vérifié : typecheck mobile OK ; RPC testée (upsert, échéance A4, idempotence, cloisonnement).
 
+**Polish design — erreurs & 404 (nuit 3)**
+- `error.tsx` (groupe /app) : limite d'erreur soignée (message rassurant « vos données ne sont pas affectées », bouton Réessayer + retour tableau de bord, référence technique). `not-found.tsx` : 404 de marque. `global-error.tsx` : filet de sécurité racine (styles inline). Plus d'écran blanc ni de page Next par défaut en cas de pépin.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
