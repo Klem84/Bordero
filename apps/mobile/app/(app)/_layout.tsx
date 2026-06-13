@@ -25,6 +25,7 @@ export default function AppLayout() {
     >
       <Stack.Screen name="index" options={{ title: 'Ma tournée' }} />
       <Stack.Screen name="intervention/[id]" options={{ title: 'Intervention' }} />
+      <Stack.Screen name="sync" options={{ title: 'Synchronisation' }} />
     </Stack>
   );
 }

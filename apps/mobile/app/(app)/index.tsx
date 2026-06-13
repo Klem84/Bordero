@@ -47,11 +47,13 @@ export default function Tournee() {
   return (
     <View style={styles.container}>
       <View style={styles.toolbar}>
-        <View>
-          <Text style={text.label}>
-            {pending > 0 ? `${pending} action(s) à synchroniser` : 'Tout est synchronisé'}
-          </Text>
-        </View>
+        <Link href="/(app)/sync" asChild>
+          <Pressable accessibilityRole="button">
+            <Text style={[text.label, pending > 0 && { color: colors.brand }]}>
+              {pending > 0 ? `${pending} action(s) à synchroniser ›` : 'Tout est synchronisé'}
+            </Text>
+          </Pressable>
+        </Link>
         <Pressable onPress={() => supabase.auth.signOut()}>
           <Text style={styles.logout}>Déconnexion</Text>
         </Pressable>
