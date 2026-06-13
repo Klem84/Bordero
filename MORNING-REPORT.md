@@ -8,7 +8,7 @@ Le parcours métier complet de Bordero fonctionne **de bout en bout** et est dé
 
 ## État de vérification (dernière passe)
 
-Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 59 (core) + 5 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 16/16 (étendu avec le lot 2) ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk a été commité et poussé sur `auto/overnight-build` après build/tests verts.
+Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 64 (core) + 5 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 16/16 (étendu avec le lot 2) ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk a été commité et poussé sur `auto/overnight-build` après build/tests verts.
 
 ## Lot 2 (démarré le 2026-06-13)
 
@@ -27,6 +27,14 @@ Sur ta demande, j'ai enchaîné sur le lot 2 en autonomie. Trois briques livrée
 - **2-opt routier réel** : le bouton « Optimiser l'ordre » utilise désormais l'**API Matrix Mapbox** (durées de trajet réelles, token déjà présent), avec repli automatique sur le vol d'oiseau si indisponible, et retour du gain à l'utilisateur (« X % de trajet en moins »). L'algorithme est blindé pour ne jamais dégrader l'ordre initial (matrices routières asymétriques).
 - **PDF étiqueté par type** : le document s'adapte (BSMV 3 volets ; BSDD et bon de prestation en exemplaire interne 1 page, libellés et signatures propres). Fin du mauvais intitulé « matières de vidange » sur un BSDD.
 - **Tableau de bord** : tuile « Réservations à traiter ».
+
+**Consolidation continue (poursuite autonome, même journée) :**
+- **Auto-revue du diff lot 2** : corrigé un vrai bug (le suivi BSDD lisait `exutoires.contact`, colonne inexistante, à la place de `contact_responsable`) ; ajouté un timeout sur l'appel Trackdéchets ; audité toutes les colonnes référencées (toutes correctes désormais).
+- **Gestion du portail depuis Paramètres** : section « Page de réservation en ligne » (lien public copiable, ouverture/fermeture, édition du slug). Le dirigeant gère sa page sans intervention.
+- **Registre** : filtre par type de document (BSMV / BSDD / bon), repris dans l'export CSV.
+- **Trackdéchets** : distinction « À compléter » (SIRET/quantité manquants) vs « Non transmis » (jeton/technique).
+- **Accessibilité** : annonces `role=status`/`aria-live` sur les messages dynamiques des nouvelles surfaces (WCAG 4.1.3).
+- **Qualité** : `normaliserSlug` extrait et testé dans `@bordero/core` (gère les accents). Seed lot 2 vérifié ré-exécutable de bout en bout (réservations, BSDD, slug, SIRET) + régénération des PDF.
 
 **À faire de ton côté pour le lot 2 :**
 - **Trackdéchets** : créer un compte sur le bac à sable (sandbox.trackdechets.beta.gouv.fr), générer un jeton API, le mettre dans `TRACKDECHETS_TOKEN` (et `TRACKDECHETS_API_URL` pour la prod). Le mapping devra être validé/ajusté contre le schéma réel du bac à sable (codes déchets, opération de traitement, SIRET réels).
