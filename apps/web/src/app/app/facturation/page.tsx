@@ -4,7 +4,8 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Card } from '@/components/ui/card';
 import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonClasses } from '@/components/ui/button';
+import { Select } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FACTURE_STATUT } from '@/lib/statuts';
 import { isStripeConfigured, isStripeTestMode } from '@/lib/stripe';
@@ -57,7 +58,11 @@ function Banniere({ stripe, numero }: { stripe?: string; numero?: string }) {
   };
   const b = map[stripe];
   if (!b) return null;
-  return <div className={`mb-5 rounded-lg border px-4 py-3 text-sm ${b.tone}`}>{b.msg}</div>;
+  return (
+    <div role="status" aria-live="polite" className={`mb-5 rounded-lg border px-4 py-3 text-sm ${b.tone}`}>
+      {b.msg}
+    </div>
+  );
 }
 
 export const metadata = { title: "Facturation" };
@@ -65,9 +70,9 @@ export const metadata = { title: "Facturation" };
 export default async function FacturationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ stripe?: string; numero?: string }>;
+  searchParams: Promise<{ stripe?: string; numero?: string; statut?: string }>;
 }) {
-  const { stripe, numero } = await searchParams;
+  const { stripe, numero, statut } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase
     .from('factures')
@@ -83,14 +88,16 @@ export default async function FacturationPage({
   );
   const numeroParId = new Map(lignesAll.map((f) => [f.id, f.numero]));
 
-  const factures = lignesAll;
-  const totalEncaisse = factures
+  // Totaux calculés sur l'ensemble ; le filtre ne porte que sur l'affichage.
+  const totalEncaisse = lignesAll
     .filter((f) => f.kind === 'facture' && f.statut === 'payee')
     .reduce((s, f) => s + Number(f.total_ttc_cents), 0);
-  const totalEmis = factures
+  const totalEmis = lignesAll
     .filter((f) => f.kind === 'facture')
     .reduce((s, f) => s + Number(f.total_ttc_cents), 0);
   const stripeOn = isStripeConfigured();
+
+  const factures = statut ? lignesAll.filter((f) => f.statut === statut) : lignesAll;
 
   return (
     <div>
@@ -118,6 +125,30 @@ export default async function FacturationPage({
           <p className="mt-1 text-xl font-semibold tabular text-success">{euros(totalEncaisse)}</p>
         </Card>
       </div>
+
+      <form method="get" className="mb-4 flex items-end gap-2">
+        <div>
+          <label htmlFor="statut" className="mb-1.5 block text-sm font-medium text-ink">
+            Filtrer par statut
+          </label>
+          <Select id="statut" name="statut" defaultValue={statut ?? ''} className="sm:w-56">
+            <option value="">Tous les statuts</option>
+            {Object.entries(FACTURE_STATUT).map(([v, s]) => (
+              <option key={v} value={v}>
+                {s.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <button type="submit" className={buttonClasses('secondary', 'md')}>
+          Filtrer
+        </button>
+        {statut ? (
+          <a href="/app/facturation" className={buttonClasses('ghost', 'md')}>
+            Réinitialiser
+          </a>
+        ) : null}
+      </form>
 
       <Table>
         <Thead>
@@ -184,13 +215,23 @@ export default async function FacturationPage({
             })
           ) : (
             <EmptyRow colSpan={5}>
-              <EmptyState
-                icon={Receipt}
-                title="Aucune facture"
-                description="Facturez une intervention terminée depuis son écran pour générer la première facture."
-                actionHref="/app/interventions"
-                actionLabel="Voir les interventions"
-              />
+              {statut ? (
+                <EmptyState
+                  icon={Receipt}
+                  title="Aucune facture pour ce statut"
+                  description="Aucune facture ne correspond au filtre sélectionné."
+                  actionHref="/app/facturation"
+                  actionLabel="Réinitialiser le filtre"
+                />
+              ) : (
+                <EmptyState
+                  icon={Receipt}
+                  title="Aucune facture"
+                  description="Facturez une intervention terminée depuis son écran pour générer la première facture."
+                  actionHref="/app/interventions"
+                  actionLabel="Voir les interventions"
+                />
+              )}
             </EmptyRow>
           )}
         </Tbody>
