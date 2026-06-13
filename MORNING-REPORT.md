@@ -137,6 +137,9 @@ corepack pnpm@9 --filter web dev
 - Bouton « Modifier la fiche » sur la fiche client : formulaire en ligne (type, nom, téléphone, email, SIRET), enregistrement via PostgREST sous RLS office (admin/exploitation). L'en-tête et le titre d'onglet se rafraîchissent après modification. Complète la saisie du SIRET (désormais éditable a posteriori).
 - Vérifié : build OK ; édition testée sous RLS (exploitation OK, chauffeur refusé).
 
+**Polish design — états vides actionnables (nuit 3)**
+- Composant `EmptyState` réutilisable (icône, titre, phrase qui apprend l'interface, action claire). Appliqué aux listes principales : clients (→ Nouveau client), interventions (→ Clients), facturation (→ Interventions), registre (→ Interventions). Chaque écran vide guide vers l'étape suivante au lieu d'afficher une simple ligne « rien ici ».
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
