@@ -13,6 +13,14 @@ interface BordRow {
   quantite_depotee_m3: number | null;
   statut: string;
   exutoire_id: string | null;
+  intervention_id: string | null;
+}
+
+/** Extrait la commune d'une adresse postale française (« 12000 Rodez » -> « Rodez »). */
+function communeDeAdresse(adresse: string | null): string | null {
+  if (!adresse) return null;
+  const m = adresse.match(/\b\d{5}\s+(.+?)\s*$/);
+  return m?.[1] ? m[1].trim() : null;
 }
 
 export async function assembleBilan(orgId: string, annee: number): Promise<BilanAssemble> {
@@ -22,7 +30,7 @@ export async function assembleBilan(orgId: string, annee: number): Promise<Bilan
 
   const { data: bordData } = await supabase
     .from('bordereaux')
-    .select('quantite_pompee_m3, quantite_depotee_m3, statut, exutoire_id')
+    .select('quantite_pompee_m3, quantite_depotee_m3, statut, exutoire_id, intervention_id')
     .gte('created_at', start)
     .lt('created_at', end);
   const bords = (bordData ?? []) as BordRow[];
@@ -36,9 +44,39 @@ export async function assembleBilan(orgId: string, annee: number): Promise<Bilan
     }
   }
 
+  // Commune + ouvrage via l'intervention liée au bordereau (intervention -> site).
+  const intIds = [...new Set(bords.map((b) => b.intervention_id).filter(Boolean))] as string[];
+  const communeMap: Record<string, string | null> = {};
+  const ouvrageMap: Record<string, string | null> = {};
+  if (intIds.length > 0) {
+    const { data: intData } = await supabase
+      .from('interventions')
+      .select('id, site_id')
+      .in('id', intIds);
+    const ints = (intData ?? []) as { id: string; site_id: string | null }[];
+    const siteIds = [...new Set(ints.map((i) => i.site_id).filter(Boolean))] as string[];
+    const siteAdresse: Record<string, string | null> = {};
+    if (siteIds.length > 0) {
+      const { data: siteData } = await supabase.from('sites').select('id, adresse').in('id', siteIds);
+      for (const s of (siteData ?? []) as { id: string; adresse: string | null }[]) {
+        siteAdresse[s.id] = s.adresse;
+      }
+    }
+    const { data: ioData } = await supabase
+      .from('intervention_ouvrages')
+      .select('intervention_id, ouvrage_id')
+      .in('intervention_id', intIds);
+    for (const io of (ioData ?? []) as { intervention_id: string; ouvrage_id: string | null }[]) {
+      if (ouvrageMap[io.intervention_id] === undefined) ouvrageMap[io.intervention_id] = io.ouvrage_id;
+    }
+    for (const i of ints) {
+      communeMap[i.id] = i.site_id ? communeDeAdresse(siteAdresse[i.site_id] ?? null) : null;
+    }
+  }
+
   const rows: BordereauBilan[] = bords.map((b) => ({
-    commune: null,
-    ouvrageId: null,
+    commune: b.intervention_id ? (communeMap[b.intervention_id] ?? null) : null,
+    ouvrageId: b.intervention_id ? (ouvrageMap[b.intervention_id] ?? null) : null,
     exutoire: b.exutoire_id ? (exMap[b.exutoire_id] ?? null) : null,
     quantitePompeeM3: Number(b.quantite_pompee_m3 ?? 0),
     quantiteDepoteeM3: b.quantite_depotee_m3 == null ? null : Number(b.quantite_depotee_m3),

@@ -178,11 +178,13 @@ try {
   }
 
   // Exutoire (filière d'élimination) pour la clôture des bordereaux
-  await client.query(
+  const exutoireRes = await client.query(
     `insert into public.exutoires(organisation_id, raison_sociale, type, adresse)
-     values ($1,'STEP de Rodez Agglomération','station_epuration','Route de Sébazac, 12000 Rodez')`,
+     values ($1,'STEP de Rodez Agglomération','station_epuration','Route de Sébazac, 12000 Rodez')
+     returning id`,
     [DEMO_ORG],
   );
+  const exutoireId = exutoireRes.rows[0].id;
 
   // Interventions de démonstration pour le planning.
   // Quelques-unes en file d'attente (BROUILLON, sans tournée), d'autres déjà
@@ -249,19 +251,20 @@ try {
        values ($1,$2,$3)`,
       [DEMO_ORG, intv.rows[0].id, dc.oid],
     );
+    return intv.rows[0].id;
   }
 
   // File d'attente (à planifier)
   await creerIntervention({ dc: demoClients[0], urgence: true });
   await creerIntervention({ dc: demoClients[2] });
   await creerIntervention({ dc: demoClients[3] });
-  // Tournée du jour, camion 1
-  await creerIntervention({ dc: demoClients[1], date: TODAY, camionIdx: 0, ordrePassage: 1 });
+  // Tournée du jour, camion 1 (demoClients[1] = Onet-le-Château, relié à un bordereau)
+  const intvOnet = await creerIntervention({ dc: demoClients[1], date: TODAY, camionIdx: 0, ordrePassage: 1 });
   await creerIntervention({ dc: demoClients[2], date: TODAY, camionIdx: 0, ordrePassage: 2 });
-  // Tournée du jour, camion 2
-  await creerIntervention({ dc: demoClients[3], date: TODAY, camionIdx: 1, ordrePassage: 1 });
-  // Tournée du lendemain, camion 1
-  await creerIntervention({ dc: demoClients[0], date: TOMORROW, camionIdx: 0, ordrePassage: 1 });
+  // Tournée du jour, camion 2 (demoClients[3] = Olemps)
+  const intvOlemps = await creerIntervention({ dc: demoClients[3], date: TODAY, camionIdx: 1, ordrePassage: 1 });
+  // Tournée du lendemain, camion 1 (demoClients[0] = Rodez)
+  const intvRodez = await creerIntervention({ dc: demoClients[0], date: TOMORROW, camionIdx: 0, ordrePassage: 1 });
 
   // Agrément préfectoral actif (Aveyron)
   await client.query(
@@ -271,17 +274,19 @@ try {
     [DEMO_ORG],
   );
 
-  // Bordereaux bouclés de démo (alimentent le registre et la jauge de quota)
+  // Bordereaux bouclés de démo (alimentent le registre, la jauge de quota et le
+  // bilan annuel). Reliés à une intervention/site pour que le bilan agrège par
+  // commune réelle (Onet-le-Château, Olemps, Rodez) et par filière (exutoire).
   const bsmv = [
-    ['BSMV-2026-90001', 2.5],
-    ['BSMV-2026-90002', 4.0],
-    ['BSMV-2026-90003', 3.5],
+    ['BSMV-2026-90001', 2.5, intvOnet],
+    ['BSMV-2026-90002', 4.0, intvOlemps],
+    ['BSMV-2026-90003', 3.5, intvRodez],
   ];
-  for (const [numero, q] of bsmv) {
+  for (const [numero, q, intId] of bsmv) {
     await client.query(
-      `insert into public.bordereaux(organisation_id, type, numero, statut, nature_matiere, quantite_pompee_m3, quantite_depotee_m3)
-       values ($1,'BSMV',$2,'BOUCLE','Matières de vidange ANC',$3,$3)`,
-      [DEMO_ORG, numero, q],
+      `insert into public.bordereaux(organisation_id, intervention_id, exutoire_id, type, numero, statut, nature_matiere, quantite_pompee_m3, quantite_depotee_m3)
+       values ($1,$2,$3,'BSMV',$4,'BOUCLE','Matières de vidange ANC',$5,$5)`,
+      [DEMO_ORG, intId, exutoireId, numero, q],
     );
   }
 
