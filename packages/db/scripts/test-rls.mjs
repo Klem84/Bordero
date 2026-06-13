@@ -454,6 +454,77 @@ try {
   await client.query('rollback');
 }
 
+// --- Test 12 : cas-limites du portail et de l'optimisation ---
+await client.query('begin');
+try {
+  const o = await client.query(
+    `insert into public.organisations(raison_sociale, slug, reservation_active) values('LIM','lim-ouvert',true) returning id`,
+  );
+  const org = o.rows[0].id;
+  await client.query(
+    `insert into public.organisations(raison_sociale, slug, reservation_active) values('FERME','lim-ferme',false)`,
+  );
+
+  await client.query('set local role anon');
+  // slug inconnu -> rejet
+  const slugInconnu = async () => {
+    await client.query('savepoint x');
+    try {
+      await client.query(
+        `select public.rpc_creer_demande_reservation('slug-inexistant','N','06',null,null,null,null,null,null,null,'')`,
+      );
+      await client.query('rollback to savepoint x');
+      return false;
+    } catch {
+      await client.query('rollback to savepoint x');
+      return true;
+    }
+  };
+  const r1 = await slugInconnu();
+  // org réservations fermées -> rejet
+  const fermeRejet = async () => {
+    await client.query('savepoint y');
+    try {
+      await client.query(
+        `select public.rpc_creer_demande_reservation('lim-ferme','N','06',null,null,null,null,null,null,null,'')`,
+      );
+      await client.query('rollback to savepoint y');
+      return false;
+    } catch {
+      await client.query('rollback to savepoint y');
+      return true;
+    }
+  };
+  const r2 = await fermeRejet();
+  // org sans contact (ni tel ni email) -> rejet
+  const sansContact = async () => {
+    await client.query('savepoint z');
+    try {
+      await client.query(
+        `select public.rpc_creer_demande_reservation('lim-ouvert','N','','',null,null,null,null,null,null,'')`,
+      );
+      await client.query('rollback to savepoint z');
+      return false;
+    } catch {
+      await client.query('rollback to savepoint z');
+      return true;
+    }
+  };
+  const r3 = await sansContact();
+  // rpc_org_publique slug inconnu -> 0 ligne
+  const pub = await client.query(`select * from public.rpc_org_publique('slug-inexistant')`);
+  await client.query('reset role');
+
+  if (r1) ok('réservation : slug inconnu rejeté'); else ko('slug inconnu', 'accepté');
+  if (r2) ok('réservation : organisation aux réservations fermées rejetée'); else ko('org fermée', 'accepté');
+  if (r3) ok('réservation : demande sans téléphone ni email rejetée'); else ko('sans contact', 'accepté');
+  if (pub.rows.length === 0) ok('rpc_org_publique : slug inconnu => aucune donnée'); else ko('org publique', 'fuite');
+} catch (e) {
+  ko('cas-limites portail (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
 await client.end();
 
 if (failures.length) {
