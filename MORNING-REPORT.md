@@ -81,6 +81,12 @@ corepack pnpm@9 --filter web dev
 - Écritures réservées aux administrateurs (RLS camions admin-only) ; les autres rôles voient un message lecture seule. Pas de suppression dure (FK tournées) : on désactive (champ `actif`), cohérent avec le filtre du planning. Le parc n'était jusqu'ici alimentable que par le seed.
 - Vérifié : build OK ; CRUD camions testé sous RLS (admin OK, exploitation rejeté, cloisonnement inter-organisations).
 
+**Paramètres — exutoires & agréments (nuit 3)**
+- `/app/parametres` étoffé en 3 sections : Flotte (camions), Exutoires (filières d'élimination), Agréments préfectoraux. Ajout/édition/suppression en ligne, réservés aux administrateurs (RLS admin-only).
+- Exutoires : raison sociale, type, adresse, SIRET, contact, tarif de dépotage (saisi en euros, stocké en centimes). Agréments : numéro, département, dates délivrance/échéance, quota annuel, statut (badge) + indication d'échéance. La modification d'agrément revalide aussi l'écran Conformité (quota/bilan).
+- Tout le paramétrage réglementaire est désormais éditable depuis l'UI (plus seulement via le seed).
+- Vérifié : build OK ; CRUD exutoires & agréments testés sous RLS (admin OK, exploitation rejeté).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
