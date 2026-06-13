@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Check } from 'lucide-react';
 import { creerClientSite, type ClientFormState } from '../actions';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,21 @@ interface AdresseFeature {
 const initial: ClientFormState = { error: null };
 
 export default function NouveauClientPage() {
+  const sp = useSearchParams();
+  // Préremplissage depuis une demande de réservation convertie.
+  const preNom = sp.get('nom') ?? '';
+  const preTel = sp.get('telephone') ?? '';
+  const preEmail = sp.get('email') ?? '';
+  const preAdresse = sp.get('adresse') ?? '';
+  const preLng = sp.get('lng');
+  const preLat = sp.get('lat');
+
   const [state, action, pending] = useActionState(creerClientSite, initial);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(preAdresse);
   const [suggestions, setSuggestions] = useState<AdresseFeature[]>([]);
-  const [selected, setSelected] = useState<AdresseFeature | null>(null);
+  const [selected, setSelected] = useState<AdresseFeature | null>(
+    preAdresse && preLng && preLat ? { label: preAdresse, lng: Number(preLng), lat: Number(preLat) } : null,
+  );
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -76,14 +88,14 @@ export default function NouveauClientPage() {
         </div>
 
         <Field label="Nom" htmlFor="nom">
-          <Input id="nom" name="nom" required />
+          <Input id="nom" name="nom" required defaultValue={preNom} />
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Téléphone" htmlFor="telephone">
-            <Input id="telephone" name="telephone" type="tel" />
+            <Input id="telephone" name="telephone" type="tel" defaultValue={preTel} />
           </Field>
           <Field label="Email" htmlFor="email">
-            <Input id="email" name="email" type="email" />
+            <Input id="email" name="email" type="email" defaultValue={preEmail} />
           </Field>
         </div>
 

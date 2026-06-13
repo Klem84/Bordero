@@ -74,8 +74,8 @@ try {
   await client.query('alter table public.facture_lignes enable trigger user');
 
   await client.query(
-    `insert into public.organisations(id, raison_sociale, siret, adresse)
-     values ($1, 'Vidanges Démo Aveyron', '90000000000017', '12 route de Rodez, 12000 Onet-le-Château')`,
+    `insert into public.organisations(id, raison_sociale, siret, adresse, slug)
+     values ($1, 'Vidanges Démo Aveyron', '90000000000017', '12 route de Rodez, 12000 Onet-le-Château', 'vidanges-demo-aveyron')`,
     [DEMO_ORG],
   );
   await client.query(
@@ -298,6 +298,15 @@ try {
        ($1,'relance','Relancer Restaurant Le Causse — entretien bac à graisse','a_faire', current_date - interval '2 days','ouvrage',$2),
        ($1,'relance','Relancer Garage Aveyron Auto — séparateur hydrocarbures','a_faire', current_date + interval '5 days','ouvrage',$3)`,
     [DEMO_ORG, demoClients[2].oid, demoClients[3].oid],
+  );
+
+  // Demandes de réservation entrantes (portail public, lot 2).
+  await client.query(
+    `insert into public.demandes_reservation(organisation_id, contact_nom, contact_telephone, contact_email, adresse, geom, type_ouvrage, creneau_souhaite, message, source, statut)
+     values
+       ($1,'Boulangerie du Centre','06 22 33 44 55',null,'5 place du Bourg, 12000 Rodez', ST_SetSRID(ST_MakePoint(2.5749,44.3495),4326),'BAC_A_GRAISSE','cette semaine si possible','Bac à graisse qui déborde, intervention rapide souhaitée.','portail','nouvelle'),
+       ($1,'Mairie de Sébazac',null,'technique@sebazac.fr','Place de la Mairie, 12740 Sébazac-Concourès', ST_SetSRID(ST_MakePoint(2.5847,44.4060),4326),'SEPARATEUR_HYDROCARBURES','courant du mois','Entretien annuel du séparateur du centre technique municipal.','portail','nouvelle')`,
+    [DEMO_ORG],
   );
 
   // Facture émise de démo (pour démontrer l'encaissement Stripe en mode test).

@@ -656,6 +656,65 @@ export type Database = {
           },
         ]
       }
+      demandes_reservation: {
+        Row: {
+          adresse: string | null
+          contact_email: string | null
+          contact_nom: string
+          contact_telephone: string | null
+          created_at: string
+          creneau_souhaite: string | null
+          geom: unknown
+          id: string
+          message: string | null
+          organisation_id: string
+          source: string
+          statut: string
+          type_ouvrage: string | null
+          updated_at: string
+        }
+        Insert: {
+          adresse?: string | null
+          contact_email?: string | null
+          contact_nom: string
+          contact_telephone?: string | null
+          created_at?: string
+          creneau_souhaite?: string | null
+          geom?: unknown
+          id?: string
+          message?: string | null
+          organisation_id: string
+          source?: string
+          statut?: string
+          type_ouvrage?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adresse?: string | null
+          contact_email?: string | null
+          contact_nom?: string
+          contact_telephone?: string | null
+          created_at?: string
+          creneau_souhaite?: string | null
+          geom?: unknown
+          id?: string
+          message?: string | null
+          organisation_id?: string
+          source?: string
+          statut?: string
+          type_ouvrage?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandes_reservation_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devis: {
         Row: {
           accepte_le: string | null
@@ -1385,7 +1444,9 @@ export type Database = {
           logo_url: string | null
           parametres: Json
           raison_sociale: string
+          reservation_active: boolean
           siret: string | null
+          slug: string | null
           updated_at: string
         }
         Insert: {
@@ -1396,7 +1457,9 @@ export type Database = {
           logo_url?: string | null
           parametres?: Json
           raison_sociale: string
+          reservation_active?: boolean
           siret?: string | null
+          slug?: string | null
           updated_at?: string
         }
         Update: {
@@ -1407,7 +1470,9 @@ export type Database = {
           logo_url?: string | null
           parametres?: Json
           raison_sociale?: string
+          reservation_active?: boolean
           siret?: string | null
+          slug?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2408,6 +2473,22 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_creer_demande_reservation: {
+        Args: {
+          p_adresse: string
+          p_creneau: string
+          p_email: string
+          p_honeypot?: string
+          p_lat: number
+          p_lng: number
+          p_message: string
+          p_nom: string
+          p_slug: string
+          p_telephone: string
+          p_type_ouvrage: string
+        }
+        Returns: string
+      }
       rpc_creer_ouvrage: {
         Args: {
           p_date_derniere?: string
@@ -2484,6 +2565,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_optimiser_tournee: {
+        Args: { p_ordre: string[]; p_tournee_id: string }
+        Returns: undefined
+      }
+      rpc_org_publique: {
+        Args: { p_slug: string }
+        Returns: {
+          raison_sociale: string
+          reservation_active: boolean
+        }[]
+      }
       rpc_supprimer_ouvrage: {
         Args: { p_ouvrage_id: string }
         Returns: undefined
@@ -2517,6 +2609,10 @@ export type Database = {
           p_signataire_nom: string
         }
         Returns: Json
+      }
+      rpc_traiter_demande: {
+        Args: { p_id: string; p_statut: string }
+        Returns: undefined
       }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }

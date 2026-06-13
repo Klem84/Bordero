@@ -11,12 +11,14 @@ import {
   Receipt,
   RefreshCw,
   Settings,
+  Inbox,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/app', label: 'Tableau de bord', icon: LayoutDashboard },
+  { href: '/app/reservations', label: 'Réservations', icon: Inbox },
   { href: '/app/clients', label: 'Clients', icon: Users },
   { href: '/app/interventions', label: 'Interventions', icon: Truck },
   { href: '/app/planning', label: 'Planning', icon: CalendarDays },
