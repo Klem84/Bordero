@@ -67,6 +67,12 @@ corepack pnpm@9 --filter web dev
 - **Aucun paiement réel** : clés `sk_test_`/`pk_test_` uniquement. Carte de test Stripe pour la démo : `4242 4242 4242 4242`, date future, CVC quelconque.
 - Vérifié : build OK, 9/9 RLS, 36 core, RPC paiement testé (partiel, solde, idempotence, cloisonnement), création de session Checkout test validée contre l'API Stripe.
 
+**App mobile chauffeur — socle (M3, nuit 3)**
+- `apps/mobile` : socle Expo Router offline-first. Écrans : connexion, « Ma tournée » (interventions du jour depuis le cache local), tunnel d'intervention (transitions terrain en gros boutons). Thème terrain (cibles ≥ 56px, contrastes francs).
+- Offline-first : base SQLite locale (`expo-sqlite`) = cache des interventions + file d'attente d'événements (outbox). Couche de sync idempotente : push des transitions via la RPC `rpc_sync_evenement` (SECURITY DEFINER, idempotent par `client_event_uuid`, transition arbitrée serveur, algo A2), puis pull de la tournée. La machine à états vient de `@bordero/core` (jamais redupliquée).
+- L'app mobile (React 18.3 / RN 0.76) est **sortie du workspace pnpm** : son `@types/react` 18 croisait celui du back-office (React 19) et cassait le build web. Elle s'installe en standalone.
+- Vérifié : typecheck mobile OK (`tsc`), web build OK, 9/9 RLS, 36 core, 2 pdf.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
@@ -83,7 +89,7 @@ corepack pnpm@9 --filter web dev
 
 ## Ce qui reste (par ordre de valeur)
 
-- **App mobile chauffeur (M3)** : non démarrée. C'est le gros morceau restant (Expo, offline-first, tunnel d'intervention). Nécessite un vrai téléphone pour tester.
+- **App mobile chauffeur (M3)** : ✅ socle Expo offline-first livré (nuit 3, typecheck OK). Restent (nécessitent un téléphone / EAS) : test réel sur device (Expo Go ou build dev), relevés terrain (volumes, photos, signature), mode hors ligne éprouvé, file de sync sous coupure réseau, icônes/splash, build EAS. Créer un utilisateur Supabase rôle `chauffeur` pour tester le filtrage RLS.
 - **Planning/dispatch (M2)** : ✅ écran d'affectation jour × camion + file d'attente livré (voir nuit 3). Restent en option : glisser-déposer, carte/itinéraire, et CRUD du parc camions depuis l'UI (aujourd'hui via seed).
 - **Récurrence & relances (M6)** : ✅ moteur A4 (trigger d'échéance), écran CA dormant détaillé et relances livrés (nuit 3). Restent : envoi réel des relances (email/SMS, hors garde-fou), séquence R1/R2/R3 automatisée via pg_cron, portail client (lot 2).
 - **Encaissement Stripe** : ✅ Stripe Checkout en mode test livré (nuit 3). Restent : webhook Stripe pour confirmation hors-redirect (prod), gestion des remboursements/avoirs, lien de paiement par SMS/email (hors garde-fou).
