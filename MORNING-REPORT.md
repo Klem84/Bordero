@@ -234,3 +234,4 @@ corepack pnpm@9 --filter web dev
 
 - Passe verte confirmée : `web build` OK, 45 tests core + 2 pdf, 9/9 RLS, typecheck mobile OK, arbre de travail propre. Branche `auto/overnight-build` stable et à jour.
 - Veille périodique : passe **complète** verte (web build, 45 core + 2 pdf, 9/9 RLS, typecheck mobile). Branche stable.
+- Veille : non-régression verte (45 core + 2 pdf, 9/9 RLS). Branche stable, aucune intervention requise.
