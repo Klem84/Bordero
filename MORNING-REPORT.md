@@ -8,7 +8,7 @@ Le parcours métier complet de Bordero fonctionne **de bout en bout** et est dé
 
 ## État de vérification (dernière passe)
 
-Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 64 (core) + 5 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 19/19 (étendu avec le lot 2 et l'audit de sécurité) ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk a été commité et poussé sur `auto/overnight-build` après build/tests verts.
+Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 64 (core) + 5 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 23/23 (étendu avec le lot 2, l'audit de sécurité et des cas-limites) ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk a été commité et poussé sur `auto/overnight-build` après build/tests verts.
 
 ## Audit de sécurité (poursuite autonome)
 
