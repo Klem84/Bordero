@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { optimiserTournee, type PointTournee } from '@bordero/core';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth';
 
@@ -43,6 +44,53 @@ export async function desaffecterIntervention(formData: FormData): Promise<void>
   await supabase.rpc('rpc_desaffecter_intervention', {
     p_intervention_id: interventionId,
   } as never);
+  revalidatePath('/app/planning');
+}
+
+/**
+ * Optimise l'ordre de passage d'une tournée (2-opt sur les coordonnées des
+ * sites). Les arrêts sans coordonnées géocodées sont conservés en fin de
+ * tournée, dans leur ordre courant. Le calcul vit dans @bordero/core ; seul le
+ * nouvel ordre est persisté via une RPC cloisonnée.
+ */
+export async function optimiserTourneeAction(formData: FormData): Promise<void> {
+  const tourneeId = String(formData.get('tournee_id') ?? '');
+  if (!tourneeId) return;
+  const user = await getCurrentUser();
+  if (!user?.orgId) return;
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from('v_planning_interventions')
+    .select('id, ordre_passage, site_lng, site_lat')
+    .eq('tournee_id', tourneeId)
+    .order('ordre_passage');
+  const rows = (data ?? []) as Array<{
+    id: string;
+    ordre_passage: number | null;
+    site_lng: number | null;
+    site_lat: number | null;
+  }>;
+
+  const avecCoords: PointTournee[] = [];
+  const sansCoords: string[] = [];
+  for (const r of rows) {
+    if (r.site_lat != null && r.site_lng != null) {
+      avecCoords.push({ id: r.id, lat: r.site_lat, lng: r.site_lng });
+    } else {
+      sansCoords.push(r.id);
+    }
+  }
+  if (avecCoords.length < 2) return; // rien à optimiser
+
+  const { ordreIds } = optimiserTournee(avecCoords);
+  const ordreFinal = [...ordreIds, ...sansCoords];
+
+  await supabase.rpc('rpc_optimiser_tournee', {
+    p_tournee_id: tourneeId,
+    p_ordre: ordreFinal,
+  } as never);
+
   revalidatePath('/app/planning');
 }
 

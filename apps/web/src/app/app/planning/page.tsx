@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Truck, MapPin, Clock, ArrowUp, ArrowDown, X, Printer } from 'lucide-react';
+import { Truck, MapPin, Clock, ArrowUp, ArrowDown, X, Printer, Waypoints } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { OUVRAGE_TYPE } from '@/lib/statuts';
 import { DateNav } from './date-nav';
 import { AffecterForm } from './affecter-form';
-import { desaffecterIntervention, deplacerIntervention } from './actions';
+import { desaffecterIntervention, deplacerIntervention, optimiserTourneeAction } from './actions';
 
 interface PlanningRow {
   id: string;
@@ -203,14 +203,29 @@ export default async function PlanningPage({
                         {CAMION_TYPE[cam.type] ?? cam.type}
                       </span>
                       {items.length > 0 ? (
-                        <Link
-                          href={`/app/planning/${selectedDate}/${cam.id}`}
-                          aria-label="Feuille de route imprimable"
-                          title="Feuille de route"
-                          className="ml-auto rounded-md p-1 text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
-                        >
-                          <Printer className="h-4 w-4" />
-                        </Link>
+                        <div className="ml-auto flex items-center gap-1">
+                          {items.length > 1 ? (
+                            <form action={optimiserTourneeAction}>
+                              <input type="hidden" name="tournee_id" value={items[0]?.tournee_id ?? ''} />
+                              <button
+                                type="submit"
+                                aria-label="Optimiser l'ordre de passage"
+                                title="Optimiser l'ordre (trajet le plus court)"
+                                className="rounded-md p-1 text-ink-muted transition-colors hover:bg-brand-subtle hover:text-brand"
+                              >
+                                <Waypoints className="h-4 w-4" />
+                              </button>
+                            </form>
+                          ) : null}
+                          <Link
+                            href={`/app/planning/${selectedDate}/${cam.id}`}
+                            aria-label="Feuille de route imprimable"
+                            title="Feuille de route"
+                            className="rounded-md p-1 text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+                          >
+                            <Printer className="h-4 w-4" />
+                          </Link>
+                        </div>
                       ) : null}
                     </div>
                     <div className="mt-2">
