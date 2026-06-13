@@ -96,6 +96,12 @@ corepack pnpm@9 --filter web dev
 - Note : la génération automatique quotidienne (pg_cron) n'est volontairement PAS activée (effet de bord) ; la fonction SQL est prête, déclenchable manuellement depuis l'écran. À planifier en prod via pg_cron si souhaité.
 - Vérifié : build OK ; séquence testée (génération idempotente, R1→R2 à +14j, R2→R3, R3 terminal).
 
+**M5 — avoirs (notes de crédit) (nuit 3)**
+- `rpc_creer_avoir` : depuis une facture émise (immuable), crée un avoir (`kind='avoir'`, `facture_origine_id`) recopiant les lignes en quantités négatives, numérotation dédiée `AV-AAAA-NNNNN`, PDF généré et stocké. Un seul avoir par facture ; un avoir ne porte que sur une facture.
+- Écran Facturation : la liste affiche factures et avoirs (badge « Avoir », montant négatif, lien vers la facture d'origine) ; bouton « Avoir » (avec saisie d'un motif) sur les factures émises non encore créditées.
+- **Webhook Stripe (prod) à câbler par toi** : l'encaissement actuel vérifie la session au retour (suffisant en staging). Pour la prod, ajouter un endpoint `POST /api/stripe/webhook` qui vérifie la signature (`STRIPE_WEBHOOK_SECRET`) et appelle `rpc_enregistrer_paiement` sur l'événement `checkout.session.completed`, afin de fiabiliser l'encaissement même si l'utilisateur ferme l'onglet. (Non fait : nécessite une URL publique + secret webhook, hors garde-fou nocturne.)
+- Vérifié : build OK ; avoir testé (totaux négatifs, lignes négatives, doublon rejeté, avoir-sur-avoir rejeté).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
@@ -115,7 +121,7 @@ corepack pnpm@9 --filter web dev
 - **App mobile chauffeur (M3)** : ✅ socle Expo offline-first livré (nuit 3, typecheck OK). Restent (nécessitent un téléphone / EAS) : test réel sur device (Expo Go ou build dev), relevés terrain (volumes, photos, signature), mode hors ligne éprouvé, file de sync sous coupure réseau, icônes/splash, build EAS. Créer un utilisateur Supabase rôle `chauffeur` pour tester le filtrage RLS.
 - **Planning/dispatch (M2)** : ✅ écran d'affectation jour × camion + file d'attente livré (voir nuit 3). Restent en option : glisser-déposer, carte/itinéraire, et CRUD du parc camions depuis l'UI (aujourd'hui via seed).
 - **Récurrence & relances (M6)** : ✅ moteur A4 (trigger d'échéance), écran CA dormant détaillé, relances et séquence R1→R2→R3 (escalade + génération idempotente des relances dues) livrés (nuit 3). Restent : envoi réel des relances (email/SMS, hors garde-fou), planification automatique via pg_cron (fonction prête, non activée), portail client (lot 2).
-- **Encaissement Stripe** : ✅ Stripe Checkout en mode test livré (nuit 3). Restent : webhook Stripe pour confirmation hors-redirect (prod), gestion des remboursements/avoirs, lien de paiement par SMS/email (hors garde-fou).
+- **Encaissement Stripe** : ✅ Stripe Checkout en mode test + avoirs (notes de crédit) livrés (nuit 3). Restent : webhook Stripe pour confirmation hors-redirect (prod, voir section M5 avoirs ci-dessus), remboursement Stripe réel (hors garde-fou), lien de paiement par SMS/email (hors garde-fou).
 - **Trackdéchets (BSDD)** : lot 2.
 - Détails : SIRET pro à la création, charte graphique, commune réelle dans le bilan (actuellement « Non précisé » faute de jointure intervention→site sur les bordereaux de démo). CRUD sites/ouvrages depuis la fiche : ✅ fait (nuit 3).
 
