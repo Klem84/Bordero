@@ -6,6 +6,7 @@ import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table
 import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
+import { dateFr } from '@/lib/format';
 import { BORDEREAU_STATUT } from '@/lib/statuts';
 
 interface BordereauRow {
@@ -104,7 +105,7 @@ export default async function RegistrePage({
                   <Td className="font-mono text-xs font-medium">{b.numero}</Td>
                   <Td className="text-ink-muted">{b.type}</Td>
                   <Td className="tabular text-ink-muted">
-                    {new Date(b.created_at).toLocaleDateString('fr-FR')}
+                    {dateFr(b.created_at)}
                   </Td>
                   <Td className="text-right tabular">{b.quantite_pompee_m3 ?? '—'}</Td>
                   <Td>

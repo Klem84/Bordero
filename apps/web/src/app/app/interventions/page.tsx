@@ -7,6 +7,7 @@ import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table
 import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
+import { dateFr } from '@/lib/format';
 import { INTERVENTION_STATUT } from '@/lib/statuts';
 
 interface InterventionRow {
@@ -84,7 +85,7 @@ export default async function InterventionsPage({
                     ) : null}
                   </Td>
                   <Td className="tabular text-ink-muted">
-                    {i.date_prevue ? new Date(i.date_prevue).toLocaleDateString('fr-FR') : '—'}
+                    {dateFr(i.date_prevue)}
                   </Td>
                   <Td>
                     <Badge tone={s.tone}>{s.label}</Badge>

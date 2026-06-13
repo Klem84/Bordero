@@ -8,7 +8,7 @@ import { Badge, type Tone } from '@/components/ui/badge';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
 import { OUVRAGE_TYPE } from '@/lib/statuts';
-import { eurosRond as euros } from '@/lib/format';
+import { eurosRond as euros, dateFr } from '@/lib/format';
 import { planifierRelance, marquerRelance, avancerRelance, genererRelancesDues } from './actions';
 
 const ETAPE: Record<string, { label: string; tone: Tone }> = {
@@ -177,11 +177,7 @@ export default async function RecurrencePage() {
                   <span className="font-medium text-ink">{OUVRAGE_TYPE[r.type] ?? r.type}</span>
                   {r.site_adresse ? <span className="block text-xs">{r.site_adresse}</span> : null}
                 </Td>
-                <Td className="tabular text-ink-muted">
-                  {r.date_derniere_intervention
-                    ? new Date(r.date_derniere_intervention).toLocaleDateString('fr-FR')
-                    : '—'}
-                </Td>
+                <Td className="tabular text-ink-muted">{dateFr(r.date_derniere_intervention)}</Td>
                 <Td>
                   <div className="flex items-center gap-2">
                     <Badge tone={ECHEANCE_BADGE[r.statut].tone}>{ECHEANCE_BADGE[r.statut].label}</Badge>
