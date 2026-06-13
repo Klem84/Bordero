@@ -5,6 +5,8 @@ import { FlotteManager, type CamionRow } from './flotte-manager';
 import { ExutoiresManager, type ExutoireRow } from './exutoires-manager';
 import { AgrementsManager, type AgrementRow } from './agrements-manager';
 
+export const metadata = { title: "Paramètres" };
+
 export default async function ParametresPage() {
   const user = await getCurrentUser();
   const isAdmin = user?.role === 'admin';

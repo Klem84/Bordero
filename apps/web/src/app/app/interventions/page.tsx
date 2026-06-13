@@ -12,6 +12,8 @@ interface InterventionRow {
   urgence: boolean;
 }
 
+export const metadata = { title: "Interventions" };
+
 export default async function InterventionsPage() {
   const supabase = await createClient();
   const { data } = await supabase

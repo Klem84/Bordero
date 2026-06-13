@@ -8,6 +8,14 @@ import { buttonClasses } from '@/components/ui/button';
 import { CLIENT_TYPE } from '@/lib/statuts';
 import { SitesOuvrages, type SiteWithOuvrages } from './sites-ouvrages';
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.from('clients').select('nom').eq('id', id).maybeSingle();
+  const nom = (data as { nom: string } | null)?.nom;
+  return { title: nom ?? 'Client' };
+}
+
 interface ClientDetail {
   id: string;
   nom: string;

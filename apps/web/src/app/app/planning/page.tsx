@@ -71,6 +71,8 @@ function InterventionMeta({ i }: { i: PlanningRow }) {
   );
 }
 
+export const metadata = { title: "Planning" };
+
 export default async function PlanningPage({
   searchParams,
 }: {

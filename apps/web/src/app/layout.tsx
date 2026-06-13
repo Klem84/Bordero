@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swa
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Bordero',
+  title: { default: 'Bordero', template: '%s · Bordero' },
   description: 'Du devis au bordereau réglementaire, sans papier, depuis le camion.',
 };
 

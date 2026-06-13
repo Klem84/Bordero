@@ -15,6 +15,8 @@ interface ClientRow {
   email: string | null;
 }
 
+export const metadata = { title: "Clients" };
+
 export default async function ClientsPage() {
   const supabase = await createClient();
   const { data } = await supabase

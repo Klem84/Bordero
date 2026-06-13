@@ -16,6 +16,8 @@ interface BordereauRow {
   pdf_url: string | null;
 }
 
+export const metadata = { title: "Registre" };
+
 export default async function RegistrePage({
   searchParams,
 }: {

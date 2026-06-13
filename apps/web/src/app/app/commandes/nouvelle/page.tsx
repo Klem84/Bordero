@@ -6,6 +6,8 @@ interface ClientLite {
   nom: string;
 }
 
+export const metadata = { title: "Nouvelle commande" };
+
 export default async function NouvelleCommandePage({
   searchParams,
 }: {

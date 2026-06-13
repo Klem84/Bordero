@@ -24,6 +24,8 @@ interface BordereauLite {
 
 const CLOTURABLE = ['BROUILLON', 'PLANIFIEE', 'EN_ROUTE', 'SUR_SITE'];
 
+export const metadata = { title: "Intervention" };
+
 export default async function InterventionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();

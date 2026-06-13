@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card';
 import { buttonClasses } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
 
+export const metadata = { title: "Bilan annuel" };
+
 export default async function BilanPage({ searchParams }: { searchParams: Promise<{ annee?: string }> }) {
   const { annee: anneeParam } = await searchParams;
   const annee = anneeParam ? Number(anneeParam) : new Date().getFullYear();

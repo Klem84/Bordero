@@ -7,6 +7,8 @@ import { cn } from '@/lib/cn';
 const euros = (cents: number) =>
   (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 
+export const metadata = { title: 'Tableau de bord' };
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const now = new Date();

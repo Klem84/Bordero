@@ -64,6 +64,8 @@ const CANAL_LABEL: Record<string, string> = {
   sms: 'SMS',
 };
 
+export const metadata = { title: "Récurrence" };
+
 export default async function RecurrencePage() {
   const supabase = await createClient();
   const today = new Date().toISOString().slice(0, 10);

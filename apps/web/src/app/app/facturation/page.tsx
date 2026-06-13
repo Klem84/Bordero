@@ -59,6 +59,8 @@ function Banniere({ stripe, numero }: { stripe?: string; numero?: string }) {
   return <div className={`mb-5 rounded-lg border px-4 py-3 text-sm ${b.tone}`}>{b.msg}</div>;
 }
 
+export const metadata = { title: "Facturation" };
+
 export default async function FacturationPage({
   searchParams,
 }: {

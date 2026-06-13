@@ -30,6 +30,8 @@ const ECHEANCE_INK: Record<string, string> = {
   inconnue: 'text-ink-muted',
 };
 
+export const metadata = { title: "Conformité" };
+
 export default async function ConformitePage() {
   const supabase = await createClient();
   const now = new Date();
