@@ -72,13 +72,13 @@ export function AppShell({
   return (
     <div className="flex min-h-screen">
       {/* Sidebar fixe (lg et plus) */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 lg:block">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 lg:block print:hidden">
         <SidebarPanel email={email} roleLabel={roleLabel} initials={initials} />
       </aside>
 
       {/* Drawer mobile (sous lg) */}
       <div
-        className={`fixed inset-0 z-40 lg:hidden ${open ? '' : 'pointer-events-none'}`}
+        className={`fixed inset-0 z-40 lg:hidden print:hidden ${open ? '' : 'pointer-events-none'}`}
         aria-hidden={!open}
       >
         <div
@@ -106,7 +106,7 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Barre supérieure mobile */}
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface/90 px-4 py-3 backdrop-blur lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface/90 px-4 py-3 backdrop-blur lg:hidden print:hidden">
           <button
             type="button"
             onClick={() => setOpen(true)}
@@ -121,8 +121,8 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="flex-1 px-5 py-6 sm:px-8 sm:py-8">
-          <div className="mx-auto max-w-[1100px]">{children}</div>
+        <main className="flex-1 px-5 py-6 sm:px-8 sm:py-8 print:p-0">
+          <div className="mx-auto max-w-[1100px] print:max-w-none">{children}</div>
         </main>
       </div>
 

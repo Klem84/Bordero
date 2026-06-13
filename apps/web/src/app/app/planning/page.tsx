@@ -1,4 +1,5 @@
-import { Truck, MapPin, Clock, ArrowUp, ArrowDown, X } from 'lucide-react';
+import Link from 'next/link';
+import { Truck, MapPin, Clock, ArrowUp, ArrowDown, X, Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card } from '@/components/ui/card';
@@ -201,6 +202,16 @@ export default async function PlanningPage({
                       <span className="text-xs text-ink-muted">
                         {CAMION_TYPE[cam.type] ?? cam.type}
                       </span>
+                      {items.length > 0 ? (
+                        <Link
+                          href={`/app/planning/${selectedDate}/${cam.id}`}
+                          aria-label="Feuille de route imprimable"
+                          title="Feuille de route"
+                          className="ml-auto rounded-md p-1 text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Link>
+                      ) : null}
                     </div>
                     <div className="mt-2">
                       <div className="flex items-center justify-between text-xs text-ink-muted">
