@@ -178,3 +178,37 @@ export async function supprimerAgrement(formData: FormData): Promise<void> {
   revalidatePath('/app/parametres');
   revalidatePath('/app/conformite');
 }
+
+// ============================================================
+// Portail public de réservation — admin
+// ============================================================
+export async function majReservation(_prev: CamionState | null, formData: FormData): Promise<CamionState> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
+
+  // Normalise le slug : minuscules, lettres/chiffres/tirets, sans tirets en bord ni doublons.
+  const slug = String(formData.get('slug') ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (slug.length < 3) {
+    return { error: 'Le lien doit faire au moins 3 caractères (lettres, chiffres, tirets).' };
+  }
+  const active = String(formData.get('reservation_active') ?? '') === 'on';
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('organisations')
+    .update({ slug, reservation_active: active } as never)
+    .eq('id', auth.orgId);
+  if (error) {
+    if (error.code === '23505' || /duplicate|unique/i.test(error.message)) {
+      return { error: 'Ce lien est déjà utilisé par une autre entreprise. Choisissez-en un autre.' };
+    }
+    return { error: 'Enregistrement impossible : ' + error.message };
+  }
+  revalidatePath('/app/parametres');
+  return { error: null, ok: true };
+}
