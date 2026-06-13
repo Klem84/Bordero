@@ -166,6 +166,9 @@ corepack pnpm@9 --filter web dev
 **M1 — encours par client (nuit 3)**
 - Résumé de facturation sur la fiche client : Facturé (net des avoirs), Encaissé, Reste dû (en rouge si positif), affiché dès qu'il existe une facture. Le bureau voit l'encours d'un client d'un coup d'œil.
 
+**Clients — export CSV (nuit 3)**
+- Export CSV de la liste clients (nom, type, téléphone, email, SIRET), recherche respectée, BOM UTF-8 + séparateur `;`. Bouton « Exporter CSV » dans l'en-tête. Sauvegarde / reprise de fichier facilitée. (Exports CSV désormais sur registre, facturation et clients.)
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
