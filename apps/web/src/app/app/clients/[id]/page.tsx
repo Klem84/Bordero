@@ -8,9 +8,7 @@ import { buttonClasses } from '@/components/ui/button';
 import { CLIENT_TYPE } from '@/lib/statuts';
 import { SitesOuvrages, type SiteWithOuvrages } from './sites-ouvrages';
 import { ClientInfo } from './client-info';
-
-const euros = (cents: number) =>
-  (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+import { euros } from '@/lib/format';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

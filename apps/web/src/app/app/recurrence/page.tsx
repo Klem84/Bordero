@@ -8,6 +8,7 @@ import { Badge, type Tone } from '@/components/ui/badge';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Table, Thead, Th, Tbody, Tr, Td, EmptyRow } from '@/components/ui/table';
 import { OUVRAGE_TYPE } from '@/lib/statuts';
+import { eurosRond as euros } from '@/lib/format';
 import { planifierRelance, marquerRelance, avancerRelance, genererRelancesDues } from './actions';
 
 const ETAPE: Record<string, { label: string; tone: Tone }> = {
@@ -22,9 +23,6 @@ const PROCHAINE_ETAPE: Record<string, string> = {
 
 /** Tarif indicatif de valorisation du CA dormant (80 € HT / m³). */
 const TARIF_M3_CENTS = 8000;
-
-const euros = (cents: number) =>
-  (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 
 interface RecurrenceRow {
   id: string;

@@ -9,6 +9,7 @@ import { Select } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FACTURE_STATUT } from '@/lib/statuts';
 import { isStripeConfigured, isStripeTestMode } from '@/lib/stripe';
+import { euros } from '@/lib/format';
 import { creerSessionPaiement } from './actions';
 import { AvoirButton } from './avoir-button';
 
@@ -22,9 +23,6 @@ interface FactureRow {
   emise_le: string | null;
   pdf_url: string | null;
 }
-
-const euros = (cents: number) =>
-  (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
 
 const ENCAISSABLE = new Set(['emise', 'envoyee', 'partiellement_payee', 'en_retard']);
 

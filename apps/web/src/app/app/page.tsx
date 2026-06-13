@@ -4,6 +4,7 @@ import { valoriserCaDormant } from '@bordero/core';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { eurosRond as euros } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
 interface TacheRow {
@@ -11,9 +12,6 @@ interface TacheRow {
   libelle: string;
   echeance: string | null;
 }
-
-const euros = (cents: number) =>
-  (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 
 export const metadata = { title: 'Tableau de bord' };
 
