@@ -175,6 +175,9 @@ corepack pnpm@9 --filter web dev
 **Consolidation — tests tarification (nuit 3)**
 - Cas-limites ajoutés sur le calcul de prix (volume = forfait, cumul urgence + week-end + dépassement, majorations sans pourcentage) et la TVA (arrondi au centime, taux réduit 10 %). Suite core à 45 tests. Vérification complète repassée verte (build, 45 core + 2 pdf, 9/9 RLS, typecheck mobile).
 
+**Consolidation — README à jour (nuit 3)**
+- `README.md` racine réécrit pour refléter l'état réel : structure du monorepo, démarrage web, **installation standalone de l'app mobile** (hors workspace pnpm, raison expliquée), commandes de tests/build, gestion de la base Supabase, identifiants de démo, pointeurs vers CLAUDE/PRODUCT/DESIGN/MORNING-REPORT. Utile pour une reprise ou un handover.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
