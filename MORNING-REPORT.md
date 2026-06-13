@@ -76,6 +76,11 @@ corepack pnpm@9 --filter web dev
 **Polish design — responsive (nuit 3)**
 - Barre latérale désormais responsive : fixe sur grand écran, drawer coulissant sous `lg` (overlay assombri, transition 200ms ease-out, fermeture par clic sur l'overlay, touche Échap, ou navigation), avec barre supérieure mobile (bouton menu + marque). Contenu adapté (paddings mobile/desktop). Centralisé dans `AppShell` ; le layout `/app` est simplifié.
 
+**M2 — gestion du parc camions depuis l'UI (nuit 3)**
+- Écran `/app/parametres` (entrée « Paramètres » dans la sidebar) : liste du parc, ajout/édition de camion en ligne (immatriculation, type, capacité de citerne, échéances contrôle technique et ADR), activation/désactivation. Badges d'échéance CT/ADR (à jour / proche / expiré).
+- Écritures réservées aux administrateurs (RLS camions admin-only) ; les autres rôles voient un message lecture seule. Pas de suppression dure (FK tournées) : on désactive (champ `actif`), cohérent avec le filtre du planning. Le parc n'était jusqu'ici alimentable que par le seed.
+- Vérifié : build OK ; CRUD camions testé sous RLS (admin OK, exploitation rejeté, cloisonnement inter-organisations).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
