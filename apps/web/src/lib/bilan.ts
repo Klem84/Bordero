@@ -1,4 +1,4 @@
-import { calculerBilan, type BilanAgregats, type BordereauBilan } from '@bordero/core';
+import { calculerBilan, communeDeAdresse, type BilanAgregats, type BordereauBilan } from '@bordero/core';
 import { createClient } from '@/lib/supabase/server';
 
 export interface BilanAssemble {
@@ -16,12 +16,6 @@ interface BordRow {
   intervention_id: string | null;
 }
 
-/** Extrait la commune d'une adresse postale française (« 12000 Rodez » -> « Rodez »). */
-function communeDeAdresse(adresse: string | null): string | null {
-  if (!adresse) return null;
-  const m = adresse.match(/\b\d{5}\s+(.+?)\s*$/);
-  return m?.[1] ? m[1].trim() : null;
-}
 
 export async function assembleBilan(orgId: string, annee: number): Promise<BilanAssemble> {
   const supabase = await createClient();

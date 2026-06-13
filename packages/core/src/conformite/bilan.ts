@@ -88,3 +88,16 @@ export function calculerBilan(
     },
   };
 }
+
+/**
+ * Extrait la commune d'une adresse postale française : la portion qui suit le
+ * code postal à 5 chiffres (« 8 chemin des Prés, 12000 Rodez » -> « Rodez »).
+ * Tolère les communes composées (Onet-le-Château, Saint-Côme-d'Olt) et renvoie
+ * `null` si aucun code postal n'est trouvé. Utilisé pour l'agrégation du bilan
+ * par commune (A3).
+ */
+export function communeDeAdresse(adresse: string | null | undefined): string | null {
+  if (!adresse) return null;
+  const m = adresse.match(/\b\d{5}\s+(.+?)\s*$/);
+  return m?.[1] ? m[1].trim() : null;
+}

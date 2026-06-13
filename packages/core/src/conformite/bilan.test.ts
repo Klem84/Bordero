@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculerBilan, type BordereauBilan } from './bilan.js';
+import { calculerBilan, communeDeAdresse, type BordereauBilan } from './bilan.js';
 
 const rows: BordereauBilan[] = [
   { commune: 'Rodez', ouvrageId: 'o1', exutoire: 'STEP Rodez', quantitePompeeM3: 3, quantiteDepoteeM3: 3, statut: 'BOUCLE' },
@@ -49,5 +49,23 @@ describe('bilan annuel (A3)', () => {
     );
     expect(b.controles.ecartPompeDepotePct).toBe(20);
     expect(b.controles.complet).toBe(false);
+  });
+});
+
+describe('communeDeAdresse (A3)', () => {
+  it('extrait la commune après le code postal', () => {
+    expect(communeDeAdresse('8 chemin des Prés, 12000 Rodez')).toBe('Rodez');
+  });
+  it('tolère les communes composées', () => {
+    expect(communeDeAdresse('15 rue du Ségala, 12850 Onet-le-Château')).toBe('Onet-le-Château');
+    expect(communeDeAdresse('Le Bourg, 12500 Saint-Côme-d\'Olt')).toBe("Saint-Côme-d'Olt");
+  });
+  it('gère une zone sans numéro de rue', () => {
+    expect(communeDeAdresse('ZA de Bel Air, 12510 Olemps')).toBe('Olemps');
+  });
+  it('renvoie null sans code postal ou adresse vide', () => {
+    expect(communeDeAdresse('Lieu-dit sans code')).toBeNull();
+    expect(communeDeAdresse(null)).toBeNull();
+    expect(communeDeAdresse('')).toBeNull();
   });
 });
