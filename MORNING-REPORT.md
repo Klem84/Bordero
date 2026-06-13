@@ -146,6 +146,9 @@ corepack pnpm@9 --filter web dev
 **Qualité — parsing commune dans le core + tests (nuit 3)**
 - `communeDeAdresse` (extraction de la commune après le code postal, utilisée par le bilan A3) remontée dans `@bordero/core` : règle métier non dupliquée, importée par le web. 4 tests ajoutés (code postal, communes composées type Onet-le-Château / Saint-Côme-d'Olt, zone sans numéro, absence de code postal). Suite core à 40 tests.
 
+**Facturation — filtre par statut + a11y (nuit 3)**
+- Filtre par statut sur la liste de facturation (formulaire GET, totaux conservés sur l'ensemble, affichage filtré, état vide dédié + réinitialisation). La bannière de retour Stripe est désormais annoncée aux lecteurs d'écran (`role="status"` + `aria-live="polite"`).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
