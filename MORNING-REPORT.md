@@ -125,6 +125,11 @@ corepack pnpm@9 --filter web dev
 - Route `/app/planning/[date]/[camion]` : feuille de route prête à imprimer (en-tête organisation + camion + date, ordre de passage, client/adresse, prestation, ouvrage, créneau, volume et durée estimés, totaux, ligne signature/horaires). Bouton « Imprimer » et lien imprimante sur chaque colonne camion du planning.
 - Mise en page d'impression propre : la coquille (sidebar/drawer/en-tête mobile) est masquée à l'impression, contenu en pleine largeur. Donne au dirigeant un document papier à remettre au chauffeur qui n'utilise pas encore l'app.
 
+**Conformité — commune réelle dans le bilan annuel (nuit 3)**
+- Le bilan annuel agrège désormais « par commune » à partir de données réelles : la commune et l'ouvrage sont dérivés du bordereau via l'intervention liée (intervention → site → adresse, commune extraite du code postal). Le « Non précisé » disparaît pour les bordereaux reliés.
+- Seed : les 3 bordereaux bouclés de démo sont reliés à des interventions de communes distinctes (Onet-le-Château, Olemps, Rodez) et à l'exutoire (STEP), pour un bilan démontrable par commune et par filière.
+- Vérifié : build OK, 36 core, parsing commune contrôlé.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
@@ -146,7 +151,7 @@ corepack pnpm@9 --filter web dev
 - **Récurrence & relances (M6)** : ✅ moteur A4 (trigger d'échéance), écran CA dormant détaillé, relances et séquence R1→R2→R3 (escalade + génération idempotente des relances dues) livrés (nuit 3). Restent : envoi réel des relances (email/SMS, hors garde-fou), planification automatique via pg_cron (fonction prête, non activée), portail client (lot 2).
 - **Encaissement Stripe** : ✅ Stripe Checkout en mode test + avoirs (notes de crédit) livrés (nuit 3). Restent : webhook Stripe pour confirmation hors-redirect (prod, voir section M5 avoirs ci-dessus), remboursement Stripe réel (hors garde-fou), lien de paiement par SMS/email (hors garde-fou).
 - **Trackdéchets (BSDD)** : lot 2.
-- Détails : SIRET pro à la création, charte graphique, commune réelle dans le bilan (actuellement « Non précisé » faute de jointure intervention→site sur les bordereaux de démo). CRUD sites/ouvrages depuis la fiche : ✅ fait (nuit 3).
+- Détails : SIRET pro à la création, charte graphique. CRUD sites/ouvrages depuis la fiche : ✅ fait (nuit 3). Commune réelle dans le bilan : ✅ fait (nuit 3).
 
 ## Actions qui requièrent ta main
 
