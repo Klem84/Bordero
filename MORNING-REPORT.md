@@ -140,6 +140,9 @@ corepack pnpm@9 --filter web dev
 **Polish design — états vides actionnables (nuit 3)**
 - Composant `EmptyState` réutilisable (icône, titre, phrase qui apprend l'interface, action claire). Appliqué aux listes principales : clients (→ Nouveau client), interventions (→ Clients), facturation (→ Interventions), registre (→ Interventions). Chaque écran vide guide vers l'étape suivante au lieu d'afficher une simple ligne « rien ici ».
 
+**M1 — recherche de clients (nuit 3)**
+- Champ de recherche sur la liste clients (formulaire GET, fonctionne sans JS) filtrant par nom, email ou téléphone côté serveur (ilike). Bouton « Effacer », et état vide distinct « Aucun résultat pour … ». Utile dès que le fichier clients grandit.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
