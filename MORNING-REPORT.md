@@ -172,6 +172,9 @@ corepack pnpm@9 --filter web dev
 **M2 — carte des arrêts sur la feuille de route (nuit 3)**
 - La feuille de route imprimable affiche une carte Mapbox (image statique, pastilles numérotées par ordre de passage) des arrêts géolocalisés. Pas de librairie JS (simple image, s'imprime), affichée seulement si le token Mapbox est présent. La vue planning expose désormais `site_lng`/`site_lat`. Token Mapbox public lu depuis `NEXT_PUBLIC_MAPBOX_TOKEN`.
 
+**Consolidation — tests tarification (nuit 3)**
+- Cas-limites ajoutés sur le calcul de prix (volume = forfait, cumul urgence + week-end + dépassement, majorations sans pourcentage) et la TVA (arrondi au centime, taux réduit 10 %). Suite core à 45 tests. Vérification complète repassée verte (build, 45 core + 2 pdf, 9/9 RLS, typecheck mobile).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
