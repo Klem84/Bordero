@@ -258,9 +258,14 @@ try {
   await creerIntervention({ dc: demoClients[0], urgence: true });
   await creerIntervention({ dc: demoClients[2] });
   await creerIntervention({ dc: demoClients[3] });
-  // Tournée du jour, camion 1 (demoClients[1] = Onet-le-Château, relié à un bordereau)
-  const intvOnet = await creerIntervention({ dc: demoClients[1], date: TODAY, camionIdx: 0, ordrePassage: 1 });
-  await creerIntervention({ dc: demoClients[2], date: TODAY, camionIdx: 0, ordrePassage: 2 });
+  // Tournée du jour, camion 1 : 4 arrêts dans un ordre volontairement en zigzag
+  // géographique (nord → sud → centre → centre-nord), pour que « Optimiser l'ordre »
+  // (2-opt) produise un gain visible. demoClients[1] (Onet) reste en tête, relié à
+  // un bordereau bouclé.
+  const intvOnet = await creerIntervention({ dc: demoClients[1], date: TODAY, camionIdx: 0, ordrePassage: 1 }); // Onet (nord)
+  await creerIntervention({ dc: demoClients[3], date: TODAY, camionIdx: 0, ordrePassage: 2 }); // Olemps (sud)
+  await creerIntervention({ dc: demoClients[2], date: TODAY, camionIdx: 0, ordrePassage: 3 }); // Le Causse (centre)
+  await creerIntervention({ dc: demoClients[0], date: TODAY, camionIdx: 0, ordrePassage: 4 }); // Rodez (centre-nord)
   // Tournée du jour, camion 2 (demoClients[3] = Olemps)
   const intvOlemps = await creerIntervention({ dc: demoClients[3], date: TODAY, camionIdx: 1, ordrePassage: 1 });
   // Tournée du lendemain, camion 1 (demoClients[0] = Rodez)
