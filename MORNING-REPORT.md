@@ -110,6 +110,11 @@ corepack pnpm@9 --filter web dev
 **Polish design — erreurs & 404 (nuit 3)**
 - `error.tsx` (groupe /app) : limite d'erreur soignée (message rassurant « vos données ne sont pas affectées », bouton Réessayer + retour tableau de bord, référence technique). `not-found.tsx` : 404 de marque. `global-error.tsx` : filet de sécurité racine (styles inline). Plus d'écran blanc ni de page Next par défaut en cas de pépin.
 
+**App mobile — signature / preuve d'intervention (nuit 3)**
+- Section « Signature client » sur l'écran intervention (Sur site / Terminée) : saisie du nom du signataire présent, ou case « client absent ». Offline-first via l'outbox SQLite (type `signature`), poussé à la synchronisation.
+- `rpc_sync_signature` (idempotent par `client_event_uuid`) enregistre `signataire_nom` + `client_absent` sur l'intervention. (La signature dessinée à l'écran est repoussée : elle nécessite un module natif de capture ; le nom + l'horodatage de l'événement font foi pour le MVP.)
+- Vérifié : typecheck mobile OK ; RPC testée (nom, idempotence, client absent, cloisonnement).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
