@@ -87,6 +87,9 @@ corepack pnpm@9 --filter web dev
 - Tout le paramétrage réglementaire est désormais éditable depuis l'UI (plus seulement via le seed).
 - Vérifié : build OK ; CRUD exutoires & agréments testés sous RLS (admin OK, exploitation rejeté).
 
+**Polish design — squelettes de chargement (nuit 3)**
+- Primitif `Skeleton` + helpers (en-tête, table, grille de cartes) et `loading.tsx` sur 9 écrans (tableau de bord, clients, interventions, planning, récurrence, conformité + registre, facturation, paramètres). Pendant le chargement serveur, l'utilisateur voit la structure de l'écran plutôt qu'un blanc. Annonce `role="status"` pour les lecteurs d'écran ; animation neutralisée par `prefers-reduced-motion`.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
