@@ -9,7 +9,7 @@ import { Select } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FACTURE_STATUT } from '@/lib/statuts';
 import { isStripeConfigured, isStripeTestMode } from '@/lib/stripe';
-import { euros } from '@/lib/format';
+import { euros, dateFr } from '@/lib/format';
 import { creerSessionPaiement } from './actions';
 import { AvoirButton } from './avoir-button';
 
@@ -184,9 +184,7 @@ export default async function FacturationPage({
                       </span>
                     ) : null}
                   </Td>
-                  <Td className="tabular text-ink-muted">
-                    {f.emise_le ? new Date(f.emise_le).toLocaleDateString('fr-FR') : '—'}
-                  </Td>
+                  <Td className="tabular text-ink-muted">{dateFr(f.emise_le)}</Td>
                   <Td className={`text-right tabular font-medium ${isAvoir ? 'text-danger' : ''}`}>
                     {euros(Number(f.total_ttc_cents))}
                   </Td>

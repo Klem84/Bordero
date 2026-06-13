@@ -11,3 +11,7 @@ export const eurosRond = (cents: number) =>
     currency: 'EUR',
     maximumFractionDigits: 0,
   });
+
+/** Date courte fr-FR (« 13/06/2026 ») depuis une chaîne ISO/date, ou « — » si vide. */
+export const dateFr = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleDateString('fr-FR') : '—';

@@ -4,7 +4,7 @@ import { valoriserCaDormant } from '@bordero/core';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
-import { eurosRond as euros } from '@/lib/format';
+import { eurosRond as euros, dateFr } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
 interface TacheRow {
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
                   <p className="min-w-0 flex-1 truncate text-sm text-ink">{t.libelle}</p>
                   {t.echeance ? (
                     <span className={cn('shrink-0 text-xs tabular', enRetard ? 'text-danger' : 'text-ink-muted')}>
-                      {new Date(t.echeance).toLocaleDateString('fr-FR')}
+                      {dateFr(t.echeance)}
                     </span>
                   ) : null}
                 </li>
