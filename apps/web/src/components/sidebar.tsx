@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Receipt,
   RefreshCw,
+  Settings,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -22,6 +23,7 @@ const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/app/recurrence', label: 'Récurrence', icon: RefreshCw },
   { href: '/app/conformite', label: 'Conformité', icon: ShieldCheck },
   { href: '/app/facturation', label: 'Facturation', icon: Receipt },
+  { href: '/app/parametres', label: 'Paramètres', icon: Settings },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
