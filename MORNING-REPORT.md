@@ -8,7 +8,7 @@ Le parcours métier complet de Bordero fonctionne **de bout en bout** et est dé
 
 ## État de vérification (dernière passe)
 
-Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 58 (core) + 2 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 9/9 ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk a été commité et poussé sur `auto/overnight-build` après build/tests verts.
+Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 59 (core) + 5 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 16/16 (étendu avec le lot 2) ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk a été commité et poussé sur `auto/overnight-build` après build/tests verts.
 
 ## Lot 2 (démarré le 2026-06-13)
 
@@ -21,6 +21,12 @@ Sur ta demande, j'ai enchaîné sur le lot 2 en autonomie. Trois briques livrée
 **Portail public de réservation.** Page publique `/reserver/[slug]` (hors auth) où un prospect dépose une demande (coordonnées, adresse géocodée data.gouv, type d'ouvrage, créneau, message). Aucune table exposée à anon : insertion via RPC `rpc_creer_demande_reservation` (résolution par slug, piège honeypot anti-spam). Back-office `/app/reservations` (entrée sidebar) : liste filtrable, conversion en client en un clic (préremplissage de la fiche), marquage traitée/rejetée. Vérifié : anon crée mais ne peut pas lire la table. 2 demandes seedées.
 
 **Intégration Trackdéchets (BSDD).** Mapping pur `construireBsddInput` (core) vers la structure `CreateFormInput` de l'API Trackdéchets (mutation `createForm`) + garde `bsddTransmissible`, 6 tests. Colonnes de suivi sur `bordereaux`. À la clôture d'un déchet dangereux, transmission best-effort via `lib/trackdechets` (client GraphQL gardé par `TRACKDECHETS_TOKEN`, bac à sable par défaut). Registre : colonne Trackdéchets (n° lisible si transmis, sinon « Non transmis » + bouton Transmettre). **Blocage contourné** : aucun jeton Trackdéchets n'étant fourni, l'intégration tourne en **mode dégradé** documenté (le bordereau BSDD reste « non transmis ») ; le flux complet est prêt et s'activera dès qu'un `TRACKDECHETS_TOKEN` sera configuré dans `.env.local`. Seed : un bordereau `BSDD-2026-90001` non transmis pour la démo.
+
+**Consolidation lot 2 (même session, après les 3 briques) :**
+- **Sécurité** : suite RLS portée de 9 à **16 assertions** (réservation anon + isolation A/B, honeypot, 2-opt cross-org, traitement cross-org).
+- **2-opt routier réel** : le bouton « Optimiser l'ordre » utilise désormais l'**API Matrix Mapbox** (durées de trajet réelles, token déjà présent), avec repli automatique sur le vol d'oiseau si indisponible, et retour du gain à l'utilisateur (« X % de trajet en moins »). L'algorithme est blindé pour ne jamais dégrader l'ordre initial (matrices routières asymétriques).
+- **PDF étiqueté par type** : le document s'adapte (BSMV 3 volets ; BSDD et bon de prestation en exemplaire interne 1 page, libellés et signatures propres). Fin du mauvais intitulé « matières de vidange » sur un BSDD.
+- **Tableau de bord** : tuile « Réservations à traiter ».
 
 **À faire de ton côté pour le lot 2 :**
 - **Trackdéchets** : créer un compte sur le bac à sable (sandbox.trackdechets.beta.gouv.fr), générer un jeton API, le mettre dans `TRACKDECHETS_TOKEN` (et `TRACKDECHETS_API_URL` pour la prod). Le mapping devra être validé/ajusté contre le schéma réel du bac à sable (codes déchets, opération de traitement, SIRET réels).
