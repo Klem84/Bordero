@@ -184,6 +184,9 @@ corepack pnpm@9 --filter web dev
 **Consolidation — vérif complète + helper dateFr (nuit 3)**
 - Non-régression confirmée de bout en bout (build, 45 core + 2 pdf, 9/9 RLS, typecheck mobile) après le refactor de formatage. Ajout de `dateFr` dans `lib/format.ts` (date courte fr-FR, « — » si vide), appliqué sur le tableau de bord et la facturation sans changement d'affichage.
 
+**Consolidation — dates uniformisées (nuit 3)**
+- `dateFr` appliqué au registre, à la liste des interventions et à la récurrence (dernière intervention) ; sortie identique. Le formatage de date est désormais centralisé dans `lib/format`. Build OK, aucun changement visuel.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
