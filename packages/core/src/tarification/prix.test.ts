@@ -30,10 +30,36 @@ describe('calcul de prix (CDC §5.1)', () => {
   it('ne facture rien sous le forfait', () => {
     expect(calculerPrixLigneCents(prestation, { volumeReelM3: 2 })).toBe(20000);
   });
+
+  it('ne facture rien au volume exactement égal au forfait', () => {
+    expect(calculerPrixLigneCents(prestation, { volumeReelM3: 3 })).toBe(20000);
+  });
+
+  it('cumule urgence + week-end + dépassement de volume', () => {
+    // 20000 base + 6000 urgence + 5000 we + (5-3)*4000 volume = 39000
+    expect(
+      calculerPrixLigneCents(prestation, { urgence: true, weekend: true, volumeReelM3: 5 }),
+    ).toBe(39000);
+  });
+
+  it('ignore les majorations sans pourcentage défini', () => {
+    expect(calculerPrixLigneCents({ prixBaseCents: 10000 }, { urgence: true, weekend: true })).toBe(
+      10000,
+    );
+  });
 });
 
 describe('TVA', () => {
   it('calcule TVA et TTC à 20 %', () => {
     expect(appliquerTVACents(20000, 20)).toEqual({ tvaCents: 4000, ttcCents: 24000 });
+  });
+
+  it('arrondit la TVA au centime', () => {
+    // 999 * 20 % = 199,8 -> 200
+    expect(appliquerTVACents(999, 20)).toEqual({ tvaCents: 200, ttcCents: 1199 });
+  });
+
+  it('gère la TVA réduite à 10 %', () => {
+    expect(appliquerTVACents(15000, 10)).toEqual({ tvaCents: 1500, ttcCents: 16500 });
   });
 });
