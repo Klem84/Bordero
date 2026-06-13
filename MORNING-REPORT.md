@@ -73,6 +73,9 @@ corepack pnpm@9 --filter web dev
 - L'app mobile (React 18.3 / RN 0.76) est **sortie du workspace pnpm** : son `@types/react` 18 croisait celui du back-office (React 19) et cassait le build web. Elle s'installe en standalone.
 - Vérifié : typecheck mobile OK (`tsc`), web build OK, 9/9 RLS, 36 core, 2 pdf.
 
+**Polish design — responsive (nuit 3)**
+- Barre latérale désormais responsive : fixe sur grand écran, drawer coulissant sous `lg` (overlay assombri, transition 200ms ease-out, fermeture par clic sur l'overlay, touche Échap, ou navigation), avec barre supérieure mobile (bouton menu + marque). Contenu adapté (paddings mobile/desktop). Centralisé dans `AppShell` ; le layout `/app` est simplifié.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
