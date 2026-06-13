@@ -242,6 +242,130 @@ try {
   await client.query('rollback');
 }
 
+// --- Test 7 : portail de réservation (anon via RPC + isolation) ---
+await client.query('begin');
+try {
+  await client.query(
+    `insert into public.organisations(id, raison_sociale, slug) values ($1,'Org A','org-a-resa'),($2,'Org B','org-b-resa')`,
+    [ORG_A, ORG_B],
+  );
+  // anon crée une demande via la RPC (résolution par slug)
+  await client.query('set local role anon');
+  const ins = await client.query(
+    `select public.rpc_creer_demande_reservation('org-a-resa','Prospect','0600000000',null,'1 rue', 2.5, 44.3,'FOSSE_TOUTES_EAUX','demain','msg','') as id`,
+  );
+  const spam = await client.query(
+    `select public.rpc_creer_demande_reservation('org-a-resa','Bot','x',null,null,null,null,null,null,null,'rempli') as id`,
+  );
+  let anonReadBlocked = false;
+  let anonN = -1;
+  await client.query('savepoint sa');
+  try {
+    const ar = await client.query(`select count(*)::int as n from public.demandes_reservation`);
+    anonN = ar.rows[0].n;
+  } catch {
+    anonReadBlocked = true;
+    await client.query('rollback to savepoint sa');
+  }
+  await client.query('reset role');
+
+  if (ins.rows[0].id) ok('réservation : anon crée une demande via RPC (slug)');
+  else ko('réservation anon insert', 'aucun id renvoyé');
+  if (spam.rows[0].id === null) ok('réservation : honeypot rempli => demande ignorée');
+  else ko('réservation honeypot', 'non ignoré');
+  if (anonReadBlocked || anonN === 0) ok('réservation : anon ne peut pas lire la table');
+  else ko('réservation anon read', `${anonN} ligne(s)`);
+
+  // Isolation : org A voit sa demande, org B non.
+  await client.query('set local role authenticated');
+  await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+    JSON.stringify({ org_id: ORG_A, app_role: 'admin', sub: '00000000-0000-4000-8000-0000000000a1' }),
+  ]);
+  const aSees = await client.query(`select count(*)::int as n from public.demandes_reservation`);
+  await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+    JSON.stringify({ org_id: ORG_B, app_role: 'admin', sub: '00000000-0000-4000-8000-0000000000b1' }),
+  ]);
+  const bSees = await client.query(`select count(*)::int as n from public.demandes_reservation`);
+  await client.query('reset role');
+  if (aSees.rows[0].n === 1) ok('réservation : org A voit sa demande');
+  else ko('réservation org A', aSees.rows[0].n);
+  if (bSees.rows[0].n === 0) ok('réservation : org B ne voit pas la demande de A');
+  else ko('réservation isolation', bSees.rows[0].n);
+} catch (e) {
+  ko('portail réservation (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
+// --- Test 8 : optimisation de tournée (rejet inter-organisations) ---
+await client.query('begin');
+try {
+  const o = await client.query(`insert into public.organisations(raison_sociale) values('OPT') returning id`);
+  const org = o.rows[0].id;
+  const cam = await client.query(
+    `insert into public.camions(organisation_id, immatriculation, type, capacite_citerne_m3) values($1,'AA-001-AA','citerne_simple',8) returning id`,
+    [org],
+  );
+  const t = await client.query(
+    `insert into public.tournees(organisation_id, camion_id, date_tournee) values($1,$2,current_date) returning id`,
+    [org, cam.rows[0].id],
+  );
+  const c = await client.query(`insert into public.clients(organisation_id, nom) values($1,'C') returning id`, [org]);
+  const s = await client.query(
+    `insert into public.sites(organisation_id, client_id, adresse) values($1,$2,'A') returning id`,
+    [org, c.rows[0].id],
+  );
+  const i = await client.query(
+    `insert into public.interventions(organisation_id, site_id, tournee_id, status, ordre_passage) values($1,$2,$3,'PLANIFIEE',1) returning id`,
+    [org, s.rows[0].id, t.rows[0].id],
+  );
+  await client.query('set local role authenticated');
+  await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+    JSON.stringify({ org_id: ORG_B, app_role: 'admin', sub: '00000000-0000-4000-8000-0000000000c2' }),
+  ]);
+  let rejected = false;
+  await client.query('savepoint so');
+  try {
+    await client.query(`select public.rpc_optimiser_tournee($1, array[$2]::uuid[])`, [t.rows[0].id, i.rows[0].id]);
+  } catch {
+    rejected = true;
+    await client.query('rollback to savepoint so');
+  }
+  await client.query('reset role');
+  if (rejected) ok('2-opt : optimiser la tournée d’une autre organisation est rejeté');
+  else ko('2-opt cross-org', 'acceptée');
+} catch (e) {
+  ko('2-opt cross-org (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
+// --- Test 9 : traitement d'une demande (cloisonnement) ---
+await client.query('begin');
+try {
+  const o = await client.query(
+    `insert into public.organisations(raison_sociale, slug) values('TRAIT','traite-slug') returning id`,
+  );
+  const org = o.rows[0].id;
+  const d = await client.query(
+    `insert into public.demandes_reservation(organisation_id, contact_nom, statut) values($1,'X','nouvelle') returning id`,
+    [org],
+  );
+  await client.query('set local role authenticated');
+  await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+    JSON.stringify({ org_id: ORG_B, app_role: 'admin', sub: '00000000-0000-4000-8000-0000000000d3' }),
+  ]);
+  await client.query(`select public.rpc_traiter_demande($1,'traitee')`, [d.rows[0].id]);
+  await client.query('reset role');
+  const after = await client.query(`select statut from public.demandes_reservation where id=$1`, [d.rows[0].id]);
+  if (after.rows[0].statut === 'nouvelle') ok('réservation : org B ne peut pas traiter la demande de A');
+  else ko('traiter cross-org', after.rows[0].statut);
+} catch (e) {
+  ko('traiter cross-org (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
 await client.end();
 
 if (failures.length) {
