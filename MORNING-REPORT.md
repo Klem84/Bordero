@@ -227,3 +227,7 @@ corepack pnpm@9 --filter web dev
 - Quirk supabase-js/ssr : l'inférence générique ne thread pas `Database` jusqu'aux requêtes ; on caste les résultats (`as XxxRow[]`) et les args (`as never`). À harmoniser via un helper typé.
 - `next.config.mjs` : `extensionAlias` .js→.ts pour les packages internes côté client, `serverExternalPackages: ['@react-pdf/renderer']`, chargement du `.env.local` racine via dotenv.
 - Secrets dans `Acces.txt` et `.env.local` (gitignorés, jamais poussés).
+
+## Journal de vérifications (non-régression)
+
+- Passe verte confirmée : `web build` OK, 45 tests core + 2 pdf, 9/9 RLS, typecheck mobile OK, arbre de travail propre. Branche `auto/overnight-build` stable et à jour.
