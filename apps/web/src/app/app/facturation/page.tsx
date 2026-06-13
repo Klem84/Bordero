@@ -1,4 +1,4 @@
-import { CreditCard, Receipt } from 'lucide-react';
+import { CreditCard, Receipt, FileDown } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card } from '@/components/ui/card';
@@ -105,11 +105,19 @@ export default async function FacturationPage({
         title="Facturation"
         subtitle="Factures émises, encaissement et suivi des règlements."
         actions={
-          stripeOn && isStripeTestMode() ? (
-            <Badge tone="info">
-              <CreditCard className="h-3.5 w-3.5" /> Stripe mode test
-            </Badge>
-          ) : null
+          <div className="flex items-center gap-2">
+            {stripeOn && isStripeTestMode() ? (
+              <Badge tone="info">
+                <CreditCard className="h-3.5 w-3.5" /> Stripe mode test
+              </Badge>
+            ) : null}
+            <a
+              href={`/app/facturation/export${statut ? `?statut=${statut}` : ''}`}
+              className={buttonClasses('secondary', 'md')}
+            >
+              <FileDown className="h-4 w-4" /> Exporter CSV
+            </a>
+          </div>
         }
       />
 
