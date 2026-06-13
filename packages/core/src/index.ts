@@ -7,3 +7,4 @@ export * from './tarification/prix.js';
 export * from './conformite/quota.js';
 export * from './conformite/bilan.js';
 export * from './tournee/deux-opt.js';
+export * from './util/slug.js';

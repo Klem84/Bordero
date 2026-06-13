@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { normaliserSlug } from '@bordero/core';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth';
 
@@ -186,13 +187,9 @@ export async function majReservation(_prev: CamionState | null, formData: FormDa
   const auth = await requireAdmin();
   if (!auth.ok) return { error: auth.error };
 
-  // Normalise le slug : minuscules, lettres/chiffres/tirets, sans tirets en bord ni doublons.
-  const slug = String(formData.get('slug') ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/-{2,}/g, '-')
-    .replace(/^-+|-+$/g, '');
+  // Normalise le slug (règle partagée @bordero/core : minuscules, sans accents,
+  // [a-z0-9-], sans tirets en bord ni doublons).
+  const slug = normaliserSlug(String(formData.get('slug') ?? ''));
   if (slug.length < 3) {
     return { error: 'Le lien doit faire au moins 3 caractères (lettres, chiffres, tirets).' };
   }
