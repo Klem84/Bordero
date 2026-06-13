@@ -8,11 +8,14 @@ import { Button } from '@/components/ui/button';
 import { FACTURE_STATUT } from '@/lib/statuts';
 import { isStripeConfigured, isStripeTestMode } from '@/lib/stripe';
 import { creerSessionPaiement } from './actions';
+import { AvoirButton } from './avoir-button';
 
 interface FactureRow {
   id: string;
   numero: string | null;
   statut: string;
+  kind: string;
+  facture_origine_id: string | null;
   total_ttc_cents: number;
   emise_le: string | null;
   pdf_url: string | null;
@@ -65,16 +68,25 @@ export default async function FacturationPage({
   const supabase = await createClient();
   const { data } = await supabase
     .from('factures')
-    .select('id, numero, statut, total_ttc_cents, emise_le, pdf_url')
-    .eq('kind', 'facture')
+    .select('id, numero, statut, kind, facture_origine_id, total_ttc_cents, emise_le, pdf_url')
+    .in('kind', ['facture', 'avoir'])
     .order('created_at', { ascending: false })
     .limit(300);
-  const factures = (data ?? []) as FactureRow[];
+  const lignesAll = (data ?? []) as FactureRow[];
 
+  // Ensemble des factures déjà créditées par un avoir + numéros pour l'affichage.
+  const avoirParOrigine = new Set(
+    lignesAll.filter((f) => f.kind === 'avoir' && f.facture_origine_id).map((f) => f.facture_origine_id as string),
+  );
+  const numeroParId = new Map(lignesAll.map((f) => [f.id, f.numero]));
+
+  const factures = lignesAll;
   const totalEncaisse = factures
-    .filter((f) => f.statut === 'payee')
+    .filter((f) => f.kind === 'facture' && f.statut === 'payee')
     .reduce((s, f) => s + Number(f.total_ttc_cents), 0);
-  const totalEmis = factures.reduce((s, f) => s + Number(f.total_ttc_cents), 0);
+  const totalEmis = factures
+    .filter((f) => f.kind === 'facture')
+    .reduce((s, f) => s + Number(f.total_ttc_cents), 0);
   const stripeOn = isStripeConfigured();
 
   return (
@@ -116,14 +128,28 @@ export default async function FacturationPage({
           {factures.length > 0 ? (
             factures.map((f) => {
               const s = FACTURE_STATUT[f.statut] ?? { label: f.statut, tone: 'neutral' as const };
-              const encaissable = stripeOn && ENCAISSABLE.has(f.statut);
+              const isAvoir = f.kind === 'avoir';
+              const encaissable = !isAvoir && stripeOn && ENCAISSABLE.has(f.statut);
+              const avoirable = !isAvoir && f.statut !== 'brouillon' && !avoirParOrigine.has(f.id);
               return (
                 <Tr key={f.id}>
-                  <Td className="font-mono text-xs font-medium">{f.numero ?? '—'}</Td>
+                  <Td className="font-mono text-xs font-medium">
+                    <span className="inline-flex items-center gap-2">
+                      {f.numero ?? '—'}
+                      {isAvoir ? <Badge tone="warning">Avoir</Badge> : null}
+                    </span>
+                    {isAvoir && f.facture_origine_id ? (
+                      <span className="mt-0.5 block font-sans text-[11px] text-ink-muted">
+                        sur {numeroParId.get(f.facture_origine_id) ?? '—'}
+                      </span>
+                    ) : null}
+                  </Td>
                   <Td className="tabular text-ink-muted">
                     {f.emise_le ? new Date(f.emise_le).toLocaleDateString('fr-FR') : '—'}
                   </Td>
-                  <Td className="text-right tabular font-medium">{euros(Number(f.total_ttc_cents))}</Td>
+                  <Td className={`text-right tabular font-medium ${isAvoir ? 'text-danger' : ''}`}>
+                    {euros(Number(f.total_ttc_cents))}
+                  </Td>
                   <Td>
                     <Badge tone={s.tone}>{s.label}</Badge>
                   </Td>
@@ -137,6 +163,7 @@ export default async function FacturationPage({
                           </Button>
                         </form>
                       ) : null}
+                      {avoirable ? <AvoirButton factureId={f.id} /> : null}
                       {f.pdf_url ? (
                         <a
                           href={`/app/facturation/${f.id}/pdf`}

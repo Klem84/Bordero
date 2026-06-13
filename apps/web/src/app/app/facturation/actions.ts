@@ -230,3 +230,94 @@ export async function enregistrerPaiementSession(
   revalidatePath('/app/facturation');
   return { ok: true, numero: numero ?? undefined };
 }
+
+// ============================================================
+// Avoir (note de crédit) sur une facture émise — RG-9.1
+// ============================================================
+export async function creerAvoir(formData: FormData): Promise<void> {
+  const factureId = String(formData.get('facture_id') ?? '');
+  const motif = String(formData.get('motif') ?? '');
+  if (!factureId) return;
+  const user = await getCurrentUser();
+  if (!user?.orgId) return;
+  const supabase = await createClient();
+
+  const { data: rpcData, error } = await supabase.rpc('rpc_creer_avoir', {
+    p_facture_id: factureId,
+    p_motif: motif,
+  } as never);
+  if (error || !rpcData) {
+    revalidatePath('/app/facturation');
+    return;
+  }
+  const res = rpcData as { avoir_id: string; numero: string };
+
+  // Génération + stockage du PDF de l'avoir (mêmes données, montants négatifs).
+  const { data: facData } = await supabase
+    .from('factures')
+    .select('numero, emise_le, echeance, client_id, total_ht_cents, total_tva_cents, total_ttc_cents, motif_avoir')
+    .eq('id', res.avoir_id)
+    .maybeSingle();
+  const fac = one<{
+    numero: string;
+    emise_le: string | null;
+    echeance: string | null;
+    client_id: string;
+    total_ht_cents: number;
+    total_tva_cents: number;
+    total_ttc_cents: number;
+    motif_avoir: string | null;
+  }>(facData);
+
+  const { data: lignesData } = await supabase
+    .from('facture_lignes')
+    .select('designation, quantite, pu_ht_cents, tva_taux')
+    .eq('facture_id', res.avoir_id)
+    .order('ordre');
+  const lignes = (lignesData ?? []) as FactureLigneData[];
+
+  const { data: clientData } = await supabase
+    .from('clients')
+    .select('nom')
+    .eq('id', fac?.client_id ?? '')
+    .maybeSingle();
+  const client = one<{ nom: string }>(clientData);
+
+  const { data: orgData } = await supabase
+    .from('organisations')
+    .select('raison_sociale, siret, adresse')
+    .eq('id', user.orgId)
+    .maybeSingle();
+  const org = one<{ raison_sociale: string; siret: string | null; adresse: string | null }>(orgData);
+
+  try {
+    const pdf = await renderFacturePdf({
+      numero: res.numero,
+      dateIso: fac?.emise_le ?? new Date().toISOString(),
+      echeanceIso: fac?.echeance ?? null,
+      organisation: {
+        raisonSociale: org?.raison_sociale ?? '',
+        siret: org?.siret ?? null,
+        adresse: org?.adresse ?? null,
+      },
+      client: { nom: client?.nom ?? '', adresse: null },
+      lignes,
+      totalHtCents: Number(fac?.total_ht_cents ?? 0),
+      totalTvaCents: Number(fac?.total_tva_cents ?? 0),
+      totalTtcCents: Number(fac?.total_ttc_cents ?? 0),
+    });
+    const sha = createHash('sha256').update(pdf).digest('hex');
+    const path = `${user.orgId}/factures/${res.avoir_id}.pdf`;
+    const admin = createAdminClient();
+    const { error: upErr } = await admin.storage
+      .from('documents')
+      .upload(path, pdf, { contentType: 'application/pdf', upsert: true });
+    if (!upErr) {
+      await supabase.from('factures').update({ pdf_url: path, pdf_sha256: sha } as never).eq('id', res.avoir_id);
+    }
+  } catch (e) {
+    console.error('PDF avoir:', e);
+  }
+
+  revalidatePath('/app/facturation');
+}

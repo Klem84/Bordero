@@ -2389,6 +2389,10 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_creer_avoir: {
+        Args: { p_facture_id: string; p_motif?: string }
+        Returns: Json
+      }
       rpc_creer_client_site: {
         Args: {
           p_adresse: string
