@@ -214,16 +214,23 @@ export async function transmettreBsdd(bordereauId: string): Promise<void> {
   const agr = one<{ departement_code: string }>(agrData);
 
   // Destinataire = exutoire (celui du bordereau, sinon le premier de l'organisation).
-  let exutoire: { raison_sociale: string; siret: string | null; adresse: string | null; contact: string | null } | null =
-    null;
+  let exutoire: {
+    raison_sociale: string;
+    siret: string | null;
+    adresse: string | null;
+    contact_responsable: string | null;
+  } | null = null;
   {
-    const q = supabase.from('exutoires').select('raison_sociale, siret, adresse, contact');
+    const q = supabase.from('exutoires').select('raison_sociale, siret, adresse, contact_responsable');
     const { data: exData } = bord.exutoire_id
       ? await q.eq('id', bord.exutoire_id).maybeSingle()
       : await q.limit(1).maybeSingle();
-    exutoire = one<{ raison_sociale: string; siret: string | null; adresse: string | null; contact: string | null }>(
-      exData,
-    );
+    exutoire = one<{
+      raison_sociale: string;
+      siret: string | null;
+      adresse: string | null;
+      contact_responsable: string | null;
+    }>(exData);
   }
 
   const brut: ConstruireBsddInput = {
@@ -252,7 +259,7 @@ export async function transmettreBsdd(bordereauId: string): Promise<void> {
       siret: exutoire?.siret ?? null,
       nom: exutoire?.raison_sociale ?? '',
       adresse: exutoire?.adresse ?? null,
-      contact: exutoire?.contact ?? null,
+      contact: exutoire?.contact_responsable ?? null,
       telephone: null,
       email: null,
     },
