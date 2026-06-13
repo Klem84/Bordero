@@ -4,7 +4,11 @@ Session de développement autonome du 2026-06-12 (soir) au 2026-06-13. Tout est 
 
 ## En une phrase
 
-Le parcours métier central de Bordero fonctionne **de bout en bout** et est démontrable avec des données de démo : **prise de commande → intervention → clôture → bordereau BSMV (PDF + numéro légal) → registre → facture (PDF) → bilan annuel préfectoral**, le tout sur une base multi-tenant sécurisée.
+Le parcours métier complet de Bordero fonctionne **de bout en bout** et est démontrable avec des données de démo : **prise de commande → planning (affectation camion + feuille de route) → exécution chauffeur hors ligne (état, relevé, signature) → clôture → bordereau BSMV (PDF + numéro légal) → registre → facture (PDF) → encaissement Stripe (test) / avoir → bilan annuel préfectoral**, plus la **récurrence** (CA dormant, relances R1→R2→R3) et le **paramétrage** (parc, exutoires, agréments), le tout sur une base multi-tenant sécurisée et un design soigné/accessible.
+
+## État de vérification (dernière passe)
+
+Tout est vert : `corepack pnpm@9 --filter web build` OK ; `corepack pnpm@9 -r test` = 40 (core) + 2 (pdf) ; `corepack pnpm@9 --filter @bordero/db test:rls` = 9/9 ; typecheck app mobile OK (`cd apps/mobile && npx tsc --noEmit`). Chaque chunk de la nuit a été commité et poussé sur `auto/overnight-build` après build/tests verts.
 
 ## Comment lancer et tester l'app (au réveil)
 
@@ -18,8 +22,9 @@ corepack pnpm@9 --filter web dev
 - **Connexion de démo : `admin@bordero-demo.fr` / `BorderoDemo2026!`**
 - Organisation de démo : « Vidanges Démo Aveyron » (agrément actif, 4 clients géolocalisés, 5 prestations, 3 bordereaux bouclés, 3 camions, 1 exutoire, 7 interventions dont 3 en file d'attente et 4 planifiées).
 - Le seed est désormais ré-exécutable à volonté (`node packages/db/scripts/seed.mjs`) même après création de bordereaux : il désactive temporairement les triggers d'immuabilité le temps du reset (connexion postgres superuser).
-- Vérifier les tests : `corepack pnpm@9 -r test` (core 36, pdf 2) et `corepack pnpm@9 --filter @bordero/db test:rls` (9/9).
+- Vérifier les tests : `corepack pnpm@9 -r test` (core 40, pdf 2) et `corepack pnpm@9 --filter @bordero/db test:rls` (9/9).
 - Build de prod : `corepack pnpm@9 --filter web build`.
+- App mobile chauffeur (hors workspace pnpm) : `cd apps/mobile && corepack pnpm@9 install --ignore-workspace` puis `npx tsc --noEmit` (ou `corepack pnpm@9 --filter @bordero/mobile start` pour Expo, nécessite un téléphone). Variables `EXPO_PUBLIC_SUPABASE_URL`/`EXPO_PUBLIC_SUPABASE_ANON_KEY` à mettre dans `apps/mobile/.env.local`.
 
 ## Ce qui est fait
 
@@ -181,7 +186,10 @@ corepack pnpm@9 --filter web dev
 ## Actions qui requièrent ta main
 
 - Rien d'irréversible n'a été fait. Tout est sur la branche `auto/overnight-build` (PR #1) : **relis et merge quand tu veux**.
-- Optionnel : fournir les clés **Sentry** (DSN) et **PostHog** (clé EU) si tu veux le monitoring.
+- **Stripe (prod)** : l'encaissement actuel vérifie la session au retour (suffisant en staging). Pour la prod, câbler un webhook `checkout.session.completed` (endpoint public + `STRIPE_WEBHOOK_SECRET`) appelant `rpc_enregistrer_paiement`. Détails dans la section M5/avoirs.
+- **App mobile** : à tester sur un vrai téléphone (Expo Go / build dev) ; créer un utilisateur Supabase de rôle `chauffeur` rattaché à l'org de démo pour valider le filtrage RLS terrain. La signature dessinée et la génération automatique des relances (pg_cron) restent à activer (fonctions prêtes).
+- **Récurrence (prod)** : activer la génération quotidienne des relances dues via pg_cron si souhaité (`rpc_generer_relances_dues`, aujourd'hui déclenchable manuellement).
+- Optionnel : fournir les clés **Sentry** (DSN) et **PostHog** (clé EU) pour le monitoring.
 - Le hook d'auth Supabase est déjà activé (vérifiable dans Authentication → Hooks).
 
 ## Notes techniques (pour reprendre le fil)
