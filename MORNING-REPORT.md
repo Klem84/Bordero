@@ -181,6 +181,9 @@ corepack pnpm@9 --filter web dev
 **Consolidation — helper de formatage euros (nuit 3)**
 - `lib/format.ts` (euros à 2 décimales, eurosRond arrondi à l'euro) ; les 4 définitions locales dupliquées (tableau de bord, récurrence, facturation, fiche client) sont remplacées par l'import. Aucun changement d'affichage (mêmes options Intl). DRY, moins de risque de divergence.
 
+**Consolidation — vérif complète + helper dateFr (nuit 3)**
+- Non-régression confirmée de bout en bout (build, 45 core + 2 pdf, 9/9 RLS, typecheck mobile) après le refactor de formatage. Ajout de `dateFr` dans `lib/format.ts` (date courte fr-FR, « — » si vide), appliqué sur le tableau de bord et la facturation sans changement d'affichage.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
