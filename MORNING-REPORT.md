@@ -42,6 +42,8 @@ Sur ta demande, j'ai enchaîné sur le lot 2 en autonomie. Trois briques livrée
 - **Accessibilité** : annonces `role=status`/`aria-live` sur les messages dynamiques des nouvelles surfaces (WCAG 4.1.3).
 - **Qualité** : `normaliserSlug` extrait et testé dans `@bordero/core` (gère les accents). Seed lot 2 vérifié ré-exécutable de bout en bout (réservations, BSDD, slug, SIRET) + régénération des PDF.
 
+**Point de sécurité à arbitrer par toi (non modifié, dépend du modèle terrain) :** les RPC de synchronisation chauffeur (`rpc_sync_evenement`/`releve`/`signature`) vérifient l'organisation mais pas l'appartenance de l'intervention au chauffeur appelant (`chauffeur_id = auth.uid()`). Un chauffeur pourrait donc pousser des événements pour l'intervention d'un collègue de la même organisation. La RLS d'accès direct à la table, elle, exige cette appartenance. Je ne l'ai pas corrigé seul car l'affectation actuelle (planning) ne pose pas `chauffeur_id` sur l'intervention (elle affecte un camion/tournée) : ajouter le contrôle casserait la synchro tant que l'assignation nominative n'est pas en place. À trancher quand tu définis l'assignation chauffeur ↔ intervention.
+
 **À faire de ton côté pour le lot 2 :**
 - **Trackdéchets** : créer un compte sur le bac à sable (sandbox.trackdechets.beta.gouv.fr), générer un jeton API, le mettre dans `TRACKDECHETS_TOKEN` (et `TRACKDECHETS_API_URL` pour la prod). Le mapping devra être validé/ajusté contre le schéma réel du bac à sable (codes déchets, opération de traitement, SIRET réels).
 - **2-opt** : option future, brancher la matrice de distances Mapbox réelle à la place du haversine pour le temps de trajet routier.
