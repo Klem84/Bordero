@@ -160,6 +160,9 @@ corepack pnpm@9 --filter web dev
 **Interventions — filtre par statut (nuit 3)**
 - Filtre par statut sur la liste des interventions (formulaire GET, valeur validée), avec état vide dédié et réinitialisation. Cohérent avec les filtres du registre et de la facturation.
 
+**Facturation — export CSV (nuit 3)**
+- Export CSV des factures et avoirs (numéro, type, date, statut, client, HT/TVA/TTC), filtre par statut respecté, BOM UTF-8 + séparateur `;` (ouverture directe Excel FR). Bouton « Exporter CSV » dans l'en-tête. Complète l'export CSV déjà présent sur le registre.
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
