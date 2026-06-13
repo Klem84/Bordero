@@ -13,6 +13,7 @@ interface BordereauRow {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const statut = url.searchParams.get('statut');
+  const type = url.searchParams.get('type');
   const from = url.searchParams.get('from');
   const to = url.searchParams.get('to');
 
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
     .order('created_at', { ascending: true })
     .limit(10000);
   if (statut) query = query.eq('statut', statut);
+  if (type) query = query.eq('type', type);
   if (from) query = query.gte('created_at', from);
   if (to) query = query.lte('created_at', to);
 

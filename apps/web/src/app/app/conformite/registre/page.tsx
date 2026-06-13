@@ -27,9 +27,9 @@ export const metadata = { title: "Registre" };
 export default async function RegistrePage({
   searchParams,
 }: {
-  searchParams: Promise<{ statut?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ statut?: string; type?: string; from?: string; to?: string }>;
 }) {
-  const { statut, from, to } = await searchParams;
+  const { statut, type, from, to } = await searchParams;
   const supabase = await createClient();
 
   let query = supabase
@@ -40,6 +40,7 @@ export default async function RegistrePage({
     .order('created_at', { ascending: false })
     .limit(500);
   if (statut) query = query.eq('statut', statut);
+  if (type) query = query.eq('type', type);
   if (from) query = query.gte('created_at', from);
   if (to) query = query.lte('created_at', to);
 
@@ -48,6 +49,7 @@ export default async function RegistrePage({
 
   const params = new URLSearchParams();
   if (statut) params.set('statut', statut);
+  if (type) params.set('type', type);
   if (from) params.set('from', from);
   if (to) params.set('to', to);
 
@@ -70,6 +72,15 @@ export default async function RegistrePage({
       />
 
       <form className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-border bg-surface p-4">
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-xs text-ink-muted">Type</span>
+          <Select name="type" defaultValue={type ?? ''} className="h-9 w-44">
+            <option value="">Tous</option>
+            <option value="BSMV">BSMV (vidange)</option>
+            <option value="BSDD">BSDD (dangereux)</option>
+            <option value="BON_PRESTATION">Bon de prestation</option>
+          </Select>
+        </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-xs text-ink-muted">Statut</span>
           <Select name="statut" defaultValue={statut ?? ''} className="h-9 w-44">
