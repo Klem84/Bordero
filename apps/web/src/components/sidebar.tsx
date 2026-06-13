@@ -29,7 +29,7 @@ const NAV: { href: string; label: string; icon: LucideIcon }[] = [
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
-    <nav className="flex flex-col gap-0.5 px-3 py-2">
+    <nav aria-label="Navigation principale" className="flex flex-col gap-0.5 px-3 py-2">
       {NAV.map(({ href, label, icon: Icon }) => {
         const active = href === '/app' ? pathname === '/app' : pathname.startsWith(href);
         return (
