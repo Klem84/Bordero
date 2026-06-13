@@ -366,6 +366,43 @@ try {
   await client.query('rollback');
 }
 
+// --- Test 10 : traitement d'une demande réservé au bureau (rôle) ---
+await client.query('begin');
+try {
+  const o = await client.query(
+    `insert into public.organisations(raison_sociale, slug) values('ROLE','role-slug') returning id`,
+  );
+  const org = o.rows[0].id;
+  const d = await client.query(
+    `insert into public.demandes_reservation(organisation_id, contact_nom, statut) values($1,'X','nouvelle') returning id`,
+    [org],
+  );
+  await client.query('set local role authenticated');
+  // Chauffeur de la MÊME organisation : ne doit pas pouvoir traiter.
+  await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+    JSON.stringify({ org_id: org, app_role: 'chauffeur', sub: '00000000-0000-4000-8000-0000000000e4' }),
+  ]);
+  let rejected = false;
+  await client.query('savepoint sr');
+  try {
+    await client.query(`select public.rpc_traiter_demande($1,'traitee')`, [d.rows[0].id]);
+  } catch {
+    rejected = true;
+    await client.query('rollback to savepoint sr');
+  }
+  await client.query('reset role');
+  const after = await client.query(`select statut from public.demandes_reservation where id=$1`, [d.rows[0].id]);
+  if (rejected && after.rows[0].statut === 'nouvelle') {
+    ok('réservation : un chauffeur ne peut pas traiter une demande (rôle bureau requis)');
+  } else {
+    ko('traiter rôle', `rejected=${rejected} statut=${after.rows[0].statut}`);
+  }
+} catch (e) {
+  ko('traiter rôle (erreur)', e.message);
+} finally {
+  await client.query('rollback');
+}
+
 await client.end();
 
 if (failures.length) {
