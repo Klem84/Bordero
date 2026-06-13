@@ -133,6 +133,10 @@ corepack pnpm@9 --filter web dev
 **M1 — SIRET client (nuit 3)**
 - Saisie du SIRET à la création d'un client (champ dédié, pertinent pour professionnels/collectivités) et affichage sur la fiche client quand renseigné. La RPC `rpc_creer_client_site` accepte désormais le SIRET (la colonne existait déjà). Édition du SIRET sur la fiche : à ajouter ultérieurement (pas de formulaire d'édition client pour l'instant).
 
+**M1 — édition de la fiche client (nuit 3)**
+- Bouton « Modifier la fiche » sur la fiche client : formulaire en ligne (type, nom, téléphone, email, SIRET), enregistrement via PostgREST sous RLS office (admin/exploitation). L'en-tête et le titre d'onglet se rafraîchissent après modification. Complète la saisie du SIRET (désormais éditable a posteriori).
+- Vérifié : build OK ; édition testée sous RLS (exploitation OK, chauffeur refusé).
+
 **Transverse**
 - Tableau de bord vivant (6 tuiles sur données réelles).
 - Monorepo pnpm + Turborepo : `apps/web` (Next 15), `packages/core` (règles métier testées), `packages/db` (migrations, types, scripts), `packages/pdf` (@react-pdf).
