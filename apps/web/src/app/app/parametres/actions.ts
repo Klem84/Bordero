@@ -85,3 +85,96 @@ export async function basculerActifCamion(formData: FormData): Promise<void> {
   await supabase.from('camions').update({ actif: !actif } as never).eq('id', id);
   revalidatePath('/app/parametres');
 }
+
+const numOrNull = (v: FormDataEntryValue | null): number | null => {
+  if (v == null || String(v).trim() === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+// ============================================================
+// Exutoires (filières d'élimination) — admin
+// ============================================================
+export async function enregistrerExutoire(_prev: CamionState | null, formData: FormData): Promise<CamionState> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
+  const id = String(formData.get('exutoire_id') ?? '');
+  const raison = String(formData.get('raison_sociale') ?? '').trim();
+  const type = String(formData.get('type') ?? 'station_epuration');
+  if (!raison) return { error: 'La raison sociale est obligatoire.' };
+
+  const payload = {
+    raison_sociale: raison,
+    type,
+    adresse: strOrNull(formData.get('adresse')),
+    siret: strOrNull(formData.get('siret')),
+    contact_responsable: strOrNull(formData.get('contact')),
+    tarif_depotage_m3_cents: numOrNull(formData.get('tarif_euros')) != null
+      ? Math.round((numOrNull(formData.get('tarif_euros')) as number) * 100)
+      : null,
+  };
+
+  const supabase = await createClient();
+  const { error } = id
+    ? await supabase.from('exutoires').update(payload as never).eq('id', id)
+    : await supabase.from('exutoires').insert({ organisation_id: auth.orgId, ...payload } as never);
+  if (error) return { error: 'Enregistrement impossible : ' + error.message };
+  revalidatePath('/app/parametres');
+  return { error: null, ok: true };
+}
+
+export async function supprimerExutoire(formData: FormData): Promise<void> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return;
+  const id = String(formData.get('exutoire_id') ?? '');
+  if (!id) return;
+  const supabase = await createClient();
+  await supabase.from('exutoires').delete().eq('id', id);
+  revalidatePath('/app/parametres');
+}
+
+// ============================================================
+// Agréments préfectoraux — admin
+// ============================================================
+export async function enregistrerAgrement(_prev: CamionState | null, formData: FormData): Promise<CamionState> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
+  const id = String(formData.get('agrement_id') ?? '');
+  const dept = String(formData.get('departement_code') ?? '').trim();
+  const numero = String(formData.get('numero') ?? '').trim();
+  const delivrance = strOrNull(formData.get('date_delivrance'));
+  const echeance = strOrNull(formData.get('date_echeance'));
+  if (!dept) return { error: 'Le code département est obligatoire.' };
+  if (!numero) return { error: "Le numéro d'agrément est obligatoire." };
+  if (!delivrance || !echeance) return { error: 'Les dates de délivrance et d’échéance sont obligatoires.' };
+
+  const payload = {
+    departement_code: dept,
+    departement_libelle: strOrNull(formData.get('departement_libelle')),
+    numero,
+    date_delivrance: delivrance,
+    date_echeance: echeance,
+    quantite_max_annuelle_m3: numOrNull(formData.get('quota')),
+    statut: String(formData.get('statut') ?? 'actif'),
+  };
+
+  const supabase = await createClient();
+  const { error } = id
+    ? await supabase.from('agrements').update(payload as never).eq('id', id)
+    : await supabase.from('agrements').insert({ organisation_id: auth.orgId, ...payload } as never);
+  if (error) return { error: 'Enregistrement impossible : ' + error.message };
+  revalidatePath('/app/parametres');
+  revalidatePath('/app/conformite');
+  return { error: null, ok: true };
+}
+
+export async function supprimerAgrement(formData: FormData): Promise<void> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return;
+  const id = String(formData.get('agrement_id') ?? '');
+  if (!id) return;
+  const supabase = await createClient();
+  await supabase.from('agrements').delete().eq('id', id);
+  revalidatePath('/app/parametres');
+  revalidatePath('/app/conformite');
+}
