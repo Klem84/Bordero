@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CalendarCheck, ShieldCheck, Wallet, PiggyBank, Droplets, Inbox, CheckSquare, type LucideIcon } from 'lucide-react';
+import { CalendarCheck, ShieldCheck, Wallet, PiggyBank, Droplets, Inbox, ClipboardList, CheckSquare, type LucideIcon } from 'lucide-react';
 import { valoriserCaDormant } from '@bordero/core';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/card';
@@ -30,6 +30,11 @@ export default async function DashboardPage() {
     .from('interventions')
     .select('*', { count: 'exact', head: true })
     .eq('status', 'BROUILLON');
+
+  const { count: reservationsNouvelles } = await supabase
+    .from('demandes_reservation')
+    .select('*', { count: 'exact', head: true })
+    .eq('statut', 'nouvelle');
 
   const { data: bordMois } = await supabase
     .from('bordereaux')
@@ -93,10 +98,18 @@ export default async function DashboardPage() {
       icon: ShieldCheck,
       accent: aRegulariser === 0 ? 'success' : 'warning',
     },
+    {
+      titre: 'Réservations',
+      valeur: `${reservationsNouvelles ?? 0}`,
+      sous: 'demandes à traiter',
+      href: '/app/reservations',
+      icon: Inbox,
+      accent: (reservationsNouvelles ?? 0) > 0 ? 'warning' : undefined,
+    },
     { titre: 'Trésorerie', valeur: euros(encaisseMois), sous: 'encaissé ce mois', href: '/app/facturation', icon: Wallet },
     { titre: 'CA dormant', valeur: euros(caDormantCents), sous: `${ouvrages.length} installations à relancer`, href: '/app/recurrence', icon: PiggyBank },
     { titre: 'Activité', valeur: `${m3Mois.toFixed(1)} m³`, sous: 'pompés ce mois', href: '/app/conformite/registre', icon: Droplets },
-    { titre: "File d'attente", valeur: `${fileAttente ?? 0}`, sous: 'commandes non planifiées', href: '/app/interventions', icon: Inbox },
+    { titre: "File d'attente", valeur: `${fileAttente ?? 0}`, sous: 'commandes non planifiées', href: '/app/interventions', icon: ClipboardList },
   ];
 
   return (
