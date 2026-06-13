@@ -290,6 +290,16 @@ try {
     );
   }
 
+  // Tâches bureau de démo (alimentent « Tâches à faire » du tableau de bord ;
+  // en réel, créées par les relances de récurrence).
+  await client.query(
+    `insert into public.taches(organisation_id, type, libelle, statut, echeance, lien_type, lien_id)
+     values
+       ($1,'relance','Relancer Restaurant Le Causse — entretien bac à graisse','a_faire', current_date - interval '2 days','ouvrage',$2),
+       ($1,'relance','Relancer Garage Aveyron Auto — séparateur hydrocarbures','a_faire', current_date + interval '5 days','ouvrage',$3)`,
+    [DEMO_ORG, demoClients[2].oid, demoClients[3].oid],
+  );
+
   // Facture émise de démo (pour démontrer l'encaissement Stripe en mode test).
   // Chemin conforme à l'immuabilité : brouillon -> lignes -> totaux -> émission.
   {

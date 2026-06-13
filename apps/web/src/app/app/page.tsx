@@ -1,8 +1,16 @@
 import Link from 'next/link';
-import { CalendarCheck, ShieldCheck, Wallet, PiggyBank, Droplets, Inbox, type LucideIcon } from 'lucide-react';
+import { CalendarCheck, ShieldCheck, Wallet, PiggyBank, Droplets, Inbox, CheckSquare, type LucideIcon } from 'lucide-react';
 import { valoriserCaDormant } from '@bordero/core';
 import { createClient } from '@/lib/supabase/server';
+import { Card } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
+
+interface TacheRow {
+  id: string;
+  libelle: string;
+  echeance: string | null;
+}
 
 const euros = (cents: number) =>
   (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
@@ -61,6 +69,14 @@ export default async function DashboardPage() {
     (s, p) => s + Number(p.montant_cents),
     0,
   );
+
+  const { data: tachesData } = await supabase
+    .from('taches')
+    .select('id, libelle, echeance')
+    .eq('statut', 'a_faire')
+    .order('echeance', { ascending: true, nullsFirst: false })
+    .limit(6);
+  const taches = (tachesData ?? []) as TacheRow[];
 
   const tuiles: {
     titre: string;
@@ -122,6 +138,38 @@ export default async function DashboardPage() {
           );
         })}
       </div>
+
+      <h2 className="mb-3 mt-8 text-sm font-semibold text-ink">Tâches à faire</h2>
+      <Card>
+        {taches.length === 0 ? (
+          <EmptyState
+            icon={CheckSquare}
+            title="Aucune tâche en attente"
+            description="Les relances d'entretien à passer apparaissent ici. Générez-les depuis la récurrence."
+            actionHref="/app/recurrence"
+            actionLabel="Voir la récurrence"
+          />
+        ) : (
+          <ul className="divide-y divide-border">
+            {taches.map((t) => {
+              const enRetard = t.echeance ? new Date(t.echeance) < new Date(today) : false;
+              return (
+                <li key={t.id} className="flex items-center gap-3 px-5 py-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-subtle text-brand-ink">
+                    <CheckSquare className="h-4 w-4" />
+                  </span>
+                  <p className="min-w-0 flex-1 truncate text-sm text-ink">{t.libelle}</p>
+                  {t.echeance ? (
+                    <span className={cn('shrink-0 text-xs tabular', enRetard ? 'text-danger' : 'text-ink-muted')}>
+                      {new Date(t.echeance).toLocaleDateString('fr-FR')}
+                    </span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Card>
     </div>
   );
 }
